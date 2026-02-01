@@ -162,4 +162,149 @@ if menu == "🏠 Dashboard":
     st.divider()
     
     # GRAFIK TREN HARGA
-    st.subheader("📈 Grafik Tren Harga (Real-
+    st.subheader("📈 Grafik Tren Harga (Real-Time)")
+    if db:
+        docs = db.collection('mentawai_v2').order_by('waktu').stream()
+        data_all = []
+        for d in docs:
+            dt = d.to_dict()
+            if dt.get('waktu') and dt.get('harga_angka'):
+                data_all.append({
+                    "Barang": dt.get('item'),
+                    "Harga": dt.get('harga_angka'),
+                    "Waktu": dt.get('waktu'),
+                    "Lokasi": dt.get('lokasi'),
+                    "Catatan": dt.get('catatan')
+                })
+        
+        df = pd.DataFrame(data_all)
+        if not df.empty:
+            pilihan_grafik = st.selectbox("Pilih Komoditas:", df['Barang'].unique())
+            df_chart = df[df['Barang'] == pilihan_grafik].copy()
+            if not df_chart.empty:
+                st.line_chart(df_chart, x="Waktu", y="Harga", color="#00CC96")
+                with st.expander(f"Lihat Detail {pilihan_grafik}"):
+                    df_display = df_chart.sort_values(by="Waktu", ascending=False)
+                    df_display['Harga'] = df_display['Harga'].apply(lambda x: f"Rp {x:,}")
+                    df_display['Waktu'] = df_display['Waktu'].dt.strftime("%d %b %H:%M")
+                    st.dataframe(df_display[['Waktu', 'Harga', 'Lokasi', 'Catatan']], use_container_width=True, hide_index=True)
+            else: st.info("Data grafik belum cukup.")
+        else: st.warning("Belum ada data.")
+
+# ================= MENU 2: KALKULATOR =================
+elif menu == "🧮 Cek Kejujuran":
+    st.title("🧮 Kalkulator Cekik Agen")
+    c_kiri, c_kanan = st.columns(2)
+    with c_kiri:
+        kom = st.selectbox("Mau jual apa?", LIST_KOMODITAS)
+        harga_pusat = acuan_data.get(kom, 0)
+        
+        if harga_pusat == 0: st.warning("⚠️ Harga acuan belum diset Admin.")
+        else: st.info(f"Patokan Padang: **Rp {harga_pusat:,}**")
+        tawaran = st.number_input("Tawaran Agen (Rp):", step=500)
+
+    with c_kanan:
+        st.write("### 📊 Analisa:")
+        if tawaran > 0 and harga_pusat > 0:
+            selisih = harga_pusat - tawaran
+            persen = (selisih / harga_pusat) * 100
+            st.metric("Potongan Agen", f"Rp {selisih:,} /kg")
+            if persen < 20: st.markdown(f"""<div class="hasil-box success">✅ HARGA ISTIMEWA!</div>""", unsafe_allow_html=True)
+            elif persen < 40: st.markdown(f"""<div class="hasil-box warning">👌 HARGA WAJAR</div>""", unsafe_allow_html=True)
+            else: st.markdown(f"""<div class="hasil-box danger">🛑 HARGA MENCEKIK!</div>""", unsafe_allow_html=True)
+
+# ================= MENU 3: LAPOR =================
+elif menu == "📝 Lapor Harga":
+    st.title("📝 Lapor Harga Lapangan")
+    with st.form("lapor"):
+        item = st.selectbox("Jenis Barang", LIST_KOMODITAS)
+        price = st.number_input("Harga Tawaran (Rp)", step=500)
+        loc = st.text_input("Lokasi", placeholder="Nama Desa")
+        note = st.text_input("Catatan", placeholder="Nama Agen / Info")
+        if st.form_submit_button("Kirim"):
+            if price > 0:
+                db.collection('mentawai_v2').add({"item": item, "harga_angka": price, "lokasi": loc, "catatan": note, "waktu": datetime.datetime.now()})
+                st.success("Terkirim!")
+                time.sleep(1)
+                st.rerun()
+
+# ================= MENU 4: UPDATE BERITA =================
+elif menu == "📢 Update Berita":
+    st.title("📢 Update Kabar Pasar")
+    current_news = settings_data.get('berita', '')
+    with st.form("news_form"):
+        news_text = st.text_area("Isi Berita:", value=current_news)
+        if st.form_submit_button("Terbitkan"):
+            db.collection('settings').document('general').set({
+                "berita": news_text,
+                "tanggal_berita": datetime.datetime.now().strftime("%d %b %Y")
+            })
+            st.success("Berita Terbit!")
+            st.rerun()
+
+# ================= MENU 5: UPDATE HARGA (KOMPLIT) =================
+elif menu == "⚙️ Update Harga":
+    st.title("⚙️ Update Harga Pusat")
+    st.link_button("🔍 Cek Google", "https://www.google.com/search?q=harga+komoditas+sumatera+barat+hari+ini")
+    
+    with st.form("update_komplit"):
+        st.subheader("🌱 Hasil Tani")
+        c1, c2, c3 = st.columns(3)
+        h_cs = c1.number_input("Cengkeh Super", value=acuan_data.get('Cengkeh Super', 0))
+        h_cb = c2.number_input("Cengkeh Biasa", value=acuan_data.get('Cengkeh Biasa', 0))
+        h_gc = c3.number_input("Gagang Cengkeh", value=acuan_data.get('Gagang Cengkeh', 0))
+        
+        c4, c5, c6 = st.columns(3)
+        h_kop = c4.number_input("Kopra", value=acuan_data.get('Kopra', 0))
+        h_pin = c5.number_input("Pinang", value=acuan_data.get('Pinang', 0))
+        h_kak = c6.number_input("Kakao (Coklat)", value=acuan_data.get('Kakao (Coklat)', 0))
+        
+        c7, c8, c9 = st.columns(3)
+        h_sag = c7.number_input("Sagu", value=acuan_data.get('Sagu', 0))
+        h_nil = c8.number_input("Nilam", value=acuan_data.get('Nilam', 0))
+        h_gam = c9.number_input("Gambir", value=acuan_data.get('Gambir', 0))
+        
+        st.divider()
+        st.subheader("🐟 Hasil Laut")
+        l1, l2, l3 = st.columns(3)
+        h_gur = l1.number_input("Gurita", value=acuan_data.get('Gurita', 0))
+        h_lob = l2.number_input("Lobster", value=acuan_data.get('Lobster', 0))
+        h_ker = l3.number_input("Kerapu", value=acuan_data.get('Kerapu', 0))
+        
+        l4, l5 = st.columns(2)
+        h_ter = l4.number_input("Teripang", value=acuan_data.get('Teripang', 0))
+        h_ias = l5.number_input("Ikan Asin", value=acuan_data.get('Ikan Asin', 0))
+        
+        st.divider()
+        st.subheader("🦅 Hasil Hutan")
+        u1, u2, u3 = st.columns(3)
+        h_wal = u1.number_input("Sarang Walet", value=acuan_data.get('Sarang Walet', 0))
+        h_man = u2.number_input("Manau (Rotan)", value=acuan_data.get('Manau (Rotan)', 0))
+        h_mad = u3.number_input("Madu Hutan", value=acuan_data.get('Madu Hutan', 0))
+
+        if st.form_submit_button("SIMPAN HARGA"):
+            data_baru = {
+                "Cengkeh Super": h_cs, "Cengkeh Biasa": h_cb, "Gagang Cengkeh": h_gc,
+                "Kopra": h_kop, "Pinang": h_pin, "Kakao (Coklat)": h_kak,
+                "Sagu": h_sag, "Nilam": h_nil, "Gambir": h_gam,
+                "Gurita": h_gur, "Lobster": h_lob, "Kerapu": h_ker, "Teripang": h_ter, "Ikan Asin": h_ias,
+                "Sarang Walet": h_wal, "Manau (Rotan)": h_man, "Madu Hutan": h_mad,
+                "updated_at": datetime.datetime.now()
+            }
+            db.collection('settings').document('harga_padang').set(data_baru, merge=True)
+            st.success("Tersimpan!")
+            st.rerun()
+
+# ================= MENU 6: HAPUS =================
+elif menu == "🗑️ Hapus Data":
+    st.title("🗑️ Hapus Laporan")
+    docs = db.collection('mentawai_v2').order_by('waktu', direction=firestore.Query.DESCENDING).limit(20).stream()
+    for doc in docs:
+        d = doc.to_dict()
+        with st.container(border=True):
+            c1, c2 = st.columns([4,1])
+            with c1: st.write(f"**{d.get('item')}** - Rp {d.get('harga_angka', 0):,} ({d.get('lokasi')})")
+            with c2: 
+                if st.button("Hapus", key=doc.id):
+                    db.collection('mentawai_v2').document(doc.id).delete()
+                    st.rerun()
