@@ -222,4 +222,31 @@ elif menu == "🧮 Cek Kejujuran Agen":
             st.write("Waiting for input...")
 
 # ================= MENU 3: INPUT HARGA DESA =================
-elif menu
+elif menu == "📝 Lapor Harga Desa":
+    st.title("📝 Lapor Situasi Lapangan")
+    st.write("Bantu petani lain dengan melaporkan harga tawaran agen di tempatmu.")
+    
+    with st.form("form_lapor"):
+        c1, c2 = st.columns(2)
+        with c1:
+            in_item = st.selectbox("Komoditas", ["Cengkeh", "Kopra", "Pinang", "Lainnya"])
+            in_price = st.number_input("Harga Tawaran (Rp)", min_value=0, step=500)
+        with c2:
+            in_loc = st.text_input("Lokasi (Dusun/Desa)", placeholder="Cth: Taileleu")
+            in_note = st.text_input("Catatan (Nama Agen/Info Lain)", placeholder="Cth: Agen Pak Budi")
+            
+        if st.form_submit_button("Kirim Laporan 🚀"):
+            if in_price > 0 and in_loc:
+                db.collection('mentawai_v2').add({
+                    "item": in_item, 
+                    "harga_angka": in_price, 
+                    "lokasi": in_loc, 
+                    "catatan": in_note, 
+                    "waktu": datetime.datetime.now()
+                })
+                st.success("Laporan berhasil dikirim! Terima kasih sudah berkontribusi.")
+                import time
+                time.sleep(1)
+                st.rerun()
+            else:
+                st.error("Mohon isi Harga dan Lokasi.")
