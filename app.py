@@ -6,7 +6,7 @@ import datetime
 import json
 import os
 
-# 1. SETUP PAGE (Tampilan Lebih Luas & Rapih)
+# 1. SETUP PAGE (Sidebar Wajib Expanded)
 st.set_page_config(
     page_title="Mentawai Smart Market", 
     page_icon="⚖️", 
@@ -14,13 +14,12 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# --- CSS PRO (Visual Styling) ---
+# --- CSS FIX (HEADER TIDAK DI-HIDE BIAR TOMBOL SIDEBAR MUNCUL) ---
 st.markdown("""
 <style>
-    /* Sembunyikan elemen bawaan Streamlit */
+    /* Kita cuma hide footer & menu pojok kanan, Header JANGAN di-hide */
     #MainMenu {visibility: hidden;}
     footer {visibility: hidden;}
-    header {visibility: hidden;}
     
     /* Style Kotak Harga Acuan */
     .acuan-box {
@@ -77,7 +76,7 @@ with st.sidebar:
     
     st.divider()
     
-    # PANDUAN SINGKAT (PENTING BUAT PEMULA)
+    # PANDUAN SINGKAT
     with st.expander("📖 Panduan Pemula"):
         st.markdown("""
         **1. Jangan Langsung Jual!**
@@ -92,17 +91,17 @@ with st.sidebar:
 
     st.divider()
     
-    # LOGIN ADMIN (PASSWORD DIAMBIL DARI SECRETS BIAR AMAN)
+    # LOGIN ADMIN
     pw_input = st.text_input("🔐 Admin Login", type="password", placeholder="Password khusus...")
     is_admin = False
     
-    # Cek password dari Secrets Streamlit (Bukan hardcode)
+    # Cek password dari Secrets
     if "admin_password" in st.secrets:
         if pw_input == st.secrets["admin_password"]:
             is_admin = True
             st.success("Mode Admin: AKTIF")
     
-    st.caption("v3.0 - Stable Release")
+    st.caption("v3.1 - Fixed Sidebar")
 
 # --- FUNGSI BANTUAN ---
 def get_harga_acuan():
@@ -118,7 +117,7 @@ acuan_data = get_harga_acuan()
 # ================= MENU 1: DASHBOARD UTAMA =================
 if menu == "🏠 Dashboard Utama":
     st.title("📡 Pusat Pantauan Harga")
-    st.markdown("Bandngkan harga desa dengan harga pusat (Padang) untuk menghindari penipuan.")
+    st.markdown("Bandingkan harga desa dengan harga pusat (Padang) untuk menghindari penipuan.")
     
     # TAMPILAN HARGA PADANG (ACUAN)
     st.markdown("### 🏙️ Harga Acuan (Gudang Padang)")
@@ -175,7 +174,6 @@ if menu == "🏠 Dashboard Utama":
         data_table = []
         for d in docs:
             dt = d.to_dict()
-            # Format waktu simpel
             waktu_str = dt.get('waktu').strftime("%d/%m %H:%M") if dt.get('waktu') else "-"
             data_table.append({
                 "Komoditas": dt.get('item'),
@@ -224,31 +222,4 @@ elif menu == "🧮 Cek Kejujuran Agen":
             st.write("Waiting for input...")
 
 # ================= MENU 3: INPUT HARGA DESA =================
-elif menu == "📝 Lapor Harga Desa":
-    st.title("📝 Lapor Situasi Lapangan")
-    st.write("Bantu petani lain dengan melaporkan harga tawaran agen di tempatmu.")
-    
-    with st.form("form_lapor"):
-        c1, c2 = st.columns(2)
-        with c1:
-            in_item = st.selectbox("Komoditas", ["Cengkeh", "Kopra", "Pinang", "Lainnya"])
-            in_price = st.number_input("Harga Tawaran (Rp)", min_value=0, step=500)
-        with c2:
-            in_loc = st.text_input("Lokasi (Dusun/Desa)", placeholder="Cth: Taileleu")
-            in_note = st.text_input("Catatan (Nama Agen/Info Lain)", placeholder="Cth: Agen Pak Budi")
-            
-        if st.form_submit_button("Kirim Laporan 🚀"):
-            if in_price > 0 and in_loc:
-                db.collection('mentawai_v2').add({
-                    "item": in_item, 
-                    "harga_angka": in_price, 
-                    "lokasi": in_loc, 
-                    "catatan": in_note, 
-                    "waktu": datetime.datetime.now()
-                })
-                st.success("Laporan berhasil dikirim! Terima kasih sudah berkontribusi.")
-                import time
-                time.sleep(1)
-                st.rerun()
-            else:
-                st.error("Mohon isi Harga dan Lokasi.")
+elif menu
