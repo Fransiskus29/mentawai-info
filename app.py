@@ -238,4 +238,45 @@ elif menu == "⚙️ Update Harga Pusat":
     
     with st.form("update_detail"):
         st.write("**Update Harga Cengkeh (Per Kg):**")
-        c1, c2 = st.columns(
+        c1, c2 = st.columns(2)
+        h_super = c1.number_input("Super (Ekspor)", value=acuan_data.get('Cengkeh_Super', 0))
+        h_biasa = c2.number_input("Biasa (Asalan)", value=acuan_data.get('Cengkeh_Biasa', 0))
+        
+        c3, c4 = st.columns(2)
+        h_gagang = c3.number_input("Gagang/Tangkai", value=acuan_data.get('Cengkeh_Gagang', 0))
+        h_minyak = c4.number_input("Bubuk/Minyak", value=acuan_data.get('Cengkeh_Minyak', 0))
+        
+        st.divider()
+        st.write("**Komoditas Lain:**")
+        k1, k2, k3 = st.columns(3)
+        h_kopra = k1.number_input("Kopra", value=acuan_data.get('Kopra', 0))
+        h_pinang = k2.number_input("Pinang", value=acuan_data.get('Pinang', 0))
+        h_gambir = k3.number_input("Gambir", value=acuan_data.get('Gambir', 0))
+        
+        if st.form_submit_button("SIMPAN UPDATE HARGA 💾"):
+            db.collection('settings').document('harga_padang').set({
+                "Cengkeh_Super": h_super,
+                "Cengkeh_Biasa": h_biasa,
+                "Cengkeh_Gagang": h_gagang,
+                "Cengkeh_Minyak": h_minyak,
+                "Kopra": h_kopra,
+                "Pinang": h_pinang,
+                "Gambir": h_gambir,
+                "updated_at": datetime.datetime.now()
+            })
+            st.success("✅ Database Pusat Berhasil Diupdate!")
+            st.rerun()
+
+# ================= MENU 5: HAPUS DATA =================
+elif menu == "🗑️ Hapus Data":
+    st.title("🗑️ Hapus Laporan Sampah")
+    docs = db.collection('mentawai_v2').order_by('waktu', direction=firestore.Query.DESCENDING).limit(20).stream()
+    for doc in docs:
+        d = doc.to_dict()
+        with st.container(border=True):
+            c1, c2 = st.columns([4,1])
+            with c1: st.write(f"**{d.get('item')}** - Rp {d.get('harga_angka', 0):,} ({d.get('lokasi')})")
+            with c2: 
+                if st.button("Hapus", key=doc.id):
+                    db.collection('mentawai_v2').document(doc.id).delete()
+                    st.rerun()
