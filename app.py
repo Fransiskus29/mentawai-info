@@ -7,135 +7,152 @@ import json
 import os
 import altair as alt
 
-# 1. KONFIGURASI HALAMAN
+# 1. SETUP TAMPILAN BARU (SIDEBAR MODE)
 st.set_page_config(
-    page_title="Info Harga Mentawai", 
-    page_icon="🌴", 
+    page_title="Mentawai Market V2", 
+    page_icon="🚀", 
     layout="wide",
-    initial_sidebar_state="collapsed"
+    initial_sidebar_state="expanded" # Sidebar terbuka otomatis
 )
 
-# --- CSS BIAR RAPI ---
+# --- CSS BARU (TEMA MODERN) ---
 st.markdown("""
 <style>
+    /* Hilangkan elemen bawaan */
     #MainMenu {visibility: hidden;}
     footer {visibility: hidden;}
-    header {visibility: hidden;}
-    div.stButton > button:first-child {
-        background-color: #00CC96;
+    
+    /* Warna latar belakang sidebar */
+    [data-testid="stSidebar"] {
+        background-color: #1E1E1E;
+    }
+    
+    /* Judul Besar */
+    h1 {
+        color: #00CC96;
+        font-weight: 700;
+    }
+    
+    /* Tombol Lapor */
+    .stButton button {
+        background-color: #FF4B4B;
         color: white;
-        border-radius: 8px;
+        border-radius: 10px;
+        font-weight: bold;
+        width: 100%;
     }
 </style>
 """, unsafe_allow_html=True)
 
-# Fungsi Waktu WIB
+# Fungsi Waktu
 def format_wib(waktu_utc):
     if waktu_utc:
         wib = waktu_utc + datetime.timedelta(hours=7)
-        return wib.strftime("%d %b %Y - %H:%M WIB")
+        return wib.strftime("%d %b %H:%M")
     return "-"
 
-# 2. KONEKSI DATABASE
+# 2. KONEKSI KE DATABASE BARU (V2)
 @st.cache_resource
 def get_db():
     try:
         if not firebase_admin._apps:
-            # Cek Secrets (Cloud)
             if "textkey" in st.secrets:
                 key_dict = json.loads(st.secrets["textkey"])
                 cred = credentials.Certificate(key_dict)
                 firebase_admin.initialize_app(cred)
-            else:
-                return None
         return firestore.client()
-    except Exception as e:
+    except:
         return None
 
 db = get_db()
 
-# --- JUDUL ---
-st.title("🌴 Pusat Informasi Harga Mentawai")
-st.write("Pantau harga hasil bumi real-time dari Siberut sampai Pagai.")
-st.divider()
+# --- SIDEBAR NAVIGASI (DESAIN BARU) ---
+with st.sidebar:
+    st.title("🏝️ NAVIGASI")
+    menu = st.radio("Pilih Menu:", ["📊 Dashboard Harga", "📝 Input Data Baru"])
+    st.divider()
+    st.info("💡 Versi Aplikasi: 2.0 (New Database)")
+    st.caption("Data lama sudah tidak ditampilkan.")
 
-if not db:
-    st.error("⚠️ Database belum terkoneksi. Mohon setting 'Secrets' di Dashboard Streamlit.")
-    st.stop()
-
-# --- NAVIGASI TAB ---
-tab1, tab2 = st.tabs(["📊 CEK HARGA", "📝 LAPOR HARGA"])
-
-# === TAB 1: MONITOR ===
-with tab1:
-    # Filter
-    c1, c2 = st.columns([1, 2])
-    with c1:
-        pilih_komoditas = st.selectbox("📦 Pilih Komoditas:", ["Semua", "Kopra Kering", "Cengkeh", "Pinang", "Gurita", "Kakao", "Sagu", "Lainnya"])
-    with c2:
-        cari_lokasi = st.text_input("📍 Cari Desa/Dusun:", placeholder="Ketik nama desa...")
-
-    # Tarik Data
-    docs = db.collection('harga_realtime').order_by('waktu_ambil', direction=firestore.Query.DESCENDING).limit(200).stream()
-    data = []
-    for doc in docs:
-        d = doc.to_dict()
-        lokasi_raw = d.get('lokasi', '-')
-        data.append({
-            "Komoditas": d.get('komoditas'),
-            "Harga": d.get('harga_angka', 0),
-            "Teks Harga": d.get('range_harga'),
-            "Lokasi": lokasi_raw,
-            "Sumber": d.get('sumber'),
-            "Waktu": format_wib(d.get('waktu_ambil'))
-        })
+# --- HALAMAN 1: DASHBOARD ---
+if menu == "📊 Dashboard Harga":
+    st.title("📈 Market Monitor V2")
+    st.write("Pantauan harga real-time dengan tampilan baru.")
     
-    df = pd.DataFrame(data)
-
-    # Logika Filter
-    if not df.empty:
-        if pilih_komoditas != "Semua":
-            df = df[df['Komoditas'] == pilih_komoditas]
-        if cari_lokasi:
-            df = df[df['Lokasi'].str.contains(cari_lokasi, case=False, na=False)]
+    if db:
+        # PENTING: KITA GANTI NAMA COLLECTION JADI 'mentawai_v2' BIAR DATANYA NOL LAGI
+        docs = db.collection('mentawai_v2').order_by('waktu', direction=firestore.Query.DESCENDING).stream()
         
-        # Tampilkan Data
+        data = []
+        for doc in docs:
+            d = doc.to_dict()
+            data.append({
+                "Komoditas": d.get('item'),
+                "Harga": d.get('harga_angka'),
+                "Tampilan Harga": d.get('harga_teks'),
+                "Lokasi": d.get('lokasi'),
+                "Waktu": format_wib(d.get('waktu'))
+            })
+        
+        df = pd.DataFrame(data)
+
+        # STATISTIK RINGKAS
+        col1, col2, col3 = st.columns(3)
+        total_data = len(df)
+        col1.metric("Total Laporan", f"{total_data} Data")
+        
         if not df.empty:
-            st.dataframe(df[['Komoditas', 'Teks Harga', 'Lokasi', 'Sumber', 'Waktu']], use_container_width=True, hide_index=True)
+            avg_price = df['Harga'].mean()
+            col2.metric("Rata-Rata Global", f"Rp {avg_price:,.0f}".replace(",", "."))
+            col3.metric("Update Terakhir", df.iloc[0]['Waktu'])
+            
+            st.divider()
+            
+            # Filter Cepat
+            filter_item = st.multiselect("Filter Komoditas:", df['Komoditas'].unique())
+            if filter_item:
+                df = df[df['Komoditas'].isin(filter_item)]
+            
+            # Tabel Baru
+            st.dataframe(
+                df[['Komoditas', 'Tampilan Harga', 'Lokasi', 'Waktu']],
+                use_container_width=True,
+                hide_index=True
+            )
         else:
-            st.warning("Data tidak ditemukan.")
-    else:
-        st.info("Belum ada data di database.")
+            col2.metric("Rata-Rata", "-")
+            col3.metric("Update", "-")
+            st.divider()
+            st.warning("⚠️ Database Masih Kosong (Fresh). Silakan input data pertama di menu sebelah kiri!")
 
-    if st.button("🔄 Refresh"):
-        st.rerun()
-
-# === TAB 2: LAPOR ===
-with tab2:
-    st.write("Masukkan harga terbaru dari lapangan.")
-    with st.form("form_lapor"):
+# --- HALAMAN 2: INPUT DATA ---
+elif menu == "📝 Input Data Baru":
+    st.title("📝 Form Lapor V2")
+    st.success("Data yang diinput di sini akan masuk ke database baru.")
+    
+    with st.form("form_v2"):
         c1, c2 = st.columns(2)
         with c1:
-            in_kom = st.selectbox("Komoditas", ["Kopra Kering", "Cengkeh", "Pinang", "Gurita", "Kakao", "Sagu", "Lainnya"])
-            in_price = st.number_input("Harga (Rp)", min_value=0, step=500)
+            in_item = st.selectbox("Komoditas", ["Kopra", "Cengkeh", "Pinang", "Gurita", "Kakao", "Sagu", "Lainnya"])
+            in_price = st.number_input("Harga (Rp)",step=500, min_value=0)
         with c2:
-            in_dusun = st.text_input("Nama Dusun", placeholder="Cth: Taileleu")
-            in_kec = st.selectbox("Kecamatan", ["Sikakap", "Pagai Utara", "Pagai Selatan", "Sipora Utara", "Sipora Selatan", "Siberut Selatan", "Siberut Barat", "Siberut Utara", "Siberut Tengah"])
+            in_loc = st.text_input("Lokasi (Desa/Kecamatan)", placeholder="Cth: Taileleu")
+            in_src = st.selectbox("Sumber", ["Petani", "Pengepul", "Masyarakat"])
+            
+        btn = st.form_submit_button("SIMPAN DATA BARU")
         
-        in_sumber = st.selectbox("Sumber", ["Petani", "Pengepul", "Masyarakat"])
-        
-        if st.form_submit_button("KIRIM DATA 🚀"):
-            if in_price > 0 and in_dusun:
-                lokasi_fix = f"{in_dusun}, {in_kec}"
-                db.collection("harga_realtime").add({
-                    "komoditas": in_kom,
+        if btn:
+            if in_price > 0 and in_loc:
+                # Simpan ke folder baru 'mentawai_v2'
+                db.collection('mentawai_v2').add({
+                    "item": in_item,
                     "harga_angka": in_price,
-                    "range_harga": f"Rp {in_price:,}".replace(",", "."),
-                    "waktu_ambil": datetime.datetime.now(),
-                    "lokasi": lokasi_fix,
-                    "sumber": in_sumber
+                    "harga_teks": f"Rp {in_price:,}".replace(",", "."),
+                    "lokasi": in_loc,
+                    "sumber": in_src,
+                    "waktu": datetime.datetime.now()
                 })
-                st.success("✅ Data berhasil masuk!")
-                st.rerun()
+                st.toast("Data Berhasil Masuk!")
+                st.success("✅ Terkirim ke Database V2!")
             else:
-                st.error("❌ Harga dan Dusun wajib diisi.")
+                st.error("Isi harga dan lokasi dulu bos!")
