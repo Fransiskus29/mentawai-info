@@ -6,21 +6,57 @@ import datetime
 import json
 import os
 
-# SETUP
-st.set_page_config(page_title="Mentawai Smart Market", page_icon="⚖️", layout="wide", initial_sidebar_state="expanded")
+# 1. SETUP PAGE (Tampilan Lebih Luas & Rapih)
+st.set_page_config(
+    page_title="Mentawai Smart Market", 
+    page_icon="⚖️", 
+    layout="wide",
+    initial_sidebar_state="expanded"
+)
 
-# CSS KEREN
+# --- CSS PRO (Visual Styling) ---
 st.markdown("""
 <style>
+    /* Sembunyikan elemen bawaan Streamlit */
     #MainMenu {visibility: hidden;}
     footer {visibility: hidden;}
-    .big-font {font-size:20px !important; font-weight: bold;}
-    .stMetric {background-color: #262730; padding: 10px; border-radius: 10px; border: 1px solid #444;}
-    .acuan-box {background-color: #00CC96; padding: 15px; border-radius: 10px; color: black; margin-bottom: 20px;}
+    header {visibility: hidden;}
+    
+    /* Style Kotak Harga Acuan */
+    .acuan-box {
+        background-color: #0e1117;
+        border: 1px solid #00CC96;
+        padding: 20px;
+        border-radius: 10px;
+        text-align: center;
+        margin-bottom: 20px;
+    }
+    .harga-besar {
+        font-size: 32px;
+        font-weight: bold;
+        color: #00CC96;
+    }
+    .label-kecil {
+        font-size: 14px;
+        color: #aaaaaa;
+    }
+    
+    /* Style Hasil Kalkulator */
+    .hasil-box {
+        padding: 15px;
+        border-radius: 8px;
+        margin-top: 10px;
+        color: white;
+        font-weight: bold;
+        text-align: center;
+    }
+    .danger {background-color: #FF4B4B;} /* Merah */
+    .warning {background-color: #FFA500; color: black;} /* Oranye */
+    .success {background-color: #00CC96;} /* Hijau */
 </style>
 """, unsafe_allow_html=True)
 
-# DATABASE
+# 2. KONEKSI DATABASE
 @st.cache_resource
 def get_db():
     try:
@@ -33,119 +69,186 @@ def get_db():
     except: return None
 db = get_db()
 
-# --- SIDEBAR: NAVIGASI & ADMIN ---
+# --- SIDEBAR: NAVIGASI & PANDUAN ---
 with st.sidebar:
-    st.title("⚖️ NAVIGASI")
-    menu = st.radio("Menu:", ["🏠 Dashboard", "🧮 Cek Kewajaran Harga", "📝 Input Harga Desa"])
+    st.title("🏝️ NAVIGASI")
+    menu = st.radio("Pilih Fitur:", 
+        ["🏠 Dashboard Utama", "🧮 Cek Kejujuran Agen", "📝 Lapor Harga Desa"])
     
     st.divider()
-    st.markdown("### 🔐 Area Admin")
-    # Password simpel buat lu update harga Padang
-    pw = st.text_input("Password Admin", type="password")
-    is_admin = False
-    if pw == "mentawai123": # Ganti password ini nanti
-        is_admin = True
-        st.success("Mode Admin Aktif")
+    
+    # PANDUAN SINGKAT (PENTING BUAT PEMULA)
+    with st.expander("📖 Panduan Pemula"):
+        st.markdown("""
+        **1. Jangan Langsung Jual!**
+        Cek dulu harga acuan di Padang lewat menu **Dashboard**.
+        
+        **2. Pakai Kalkulator!**
+        Masuk ke menu **Cek Kejujuran**, masukkan tawaran agen. Kalau hasilnya MERAH, cari agen lain!
+        
+        **3. Bantu Sesama!**
+        Kalau sudah dapat harga fix, lapor di menu **Input Harga** biar warga lain tahu.
+        """)
 
-# --- FUNGSI AMBIL HARGA ACUAN (PADANG) ---
+    st.divider()
+    
+    # LOGIN ADMIN (PASSWORD DIAMBIL DARI SECRETS BIAR AMAN)
+    pw_input = st.text_input("🔐 Admin Login", type="password", placeholder="Password khusus...")
+    is_admin = False
+    
+    # Cek password dari Secrets Streamlit (Bukan hardcode)
+    if "admin_password" in st.secrets:
+        if pw_input == st.secrets["admin_password"]:
+            is_admin = True
+            st.success("Mode Admin: AKTIF")
+    
+    st.caption("v3.0 - Stable Release")
+
+# --- FUNGSI BANTUAN ---
 def get_harga_acuan():
-    try:
-        doc = db.collection('settings').document('harga_padang').get()
-        if doc.exists: return doc.to_dict()
-        else: return {}
-    except: return {}
+    if db:
+        try:
+            doc = db.collection('settings').document('harga_padang').get()
+            if doc.exists: return doc.to_dict()
+        except: pass
+    return {}
 
 acuan_data = get_harga_acuan()
 
-# === HALAMAN 1: DASHBOARD ===
-if menu == "🏠 Dashboard":
-    st.title("📡 Pantauan Pasar")
+# ================= MENU 1: DASHBOARD UTAMA =================
+if menu == "🏠 Dashboard Utama":
+    st.title("📡 Pusat Pantauan Harga")
+    st.markdown("Bandngkan harga desa dengan harga pusat (Padang) untuk menghindari penipuan.")
     
-    # TAMPILAN HARGA ACUAN (PADANG)
-    st.markdown("### 🏙️ Harga Acuan (Padang/Eksportir)")
-    st.caption("Ini harga di kota besar. Jadi patokan biar tidak ditipu terlalu jauh.")
+    # TAMPILAN HARGA PADANG (ACUAN)
+    st.markdown("### 🏙️ Harga Acuan (Gudang Padang)")
     
     if acuan_data:
         c1, c2, c3 = st.columns(3)
-        c1.metric("Cengkeh (Padang)", f"Rp {acuan_data.get('Cengkeh', 0):,}")
-        c2.metric("Kopra (Padang)", f"Rp {acuan_data.get('Kopra', 0):,}")
-        c3.metric("Pinang (Padang)", f"Rp {acuan_data.get('Pinang', 0):,}")
+        with c1:
+            st.markdown(f"""
+            <div class="acuan-box">
+                <div class="label-kecil">CENGKEH (Kering)</div>
+                <div class="harga-besar">Rp {acuan_data.get('Cengkeh', 0):,}</div>
+            </div>
+            """, unsafe_allow_html=True)
+        with c2:
+            st.markdown(f"""
+            <div class="acuan-box">
+                <div class="label-kecil">KOPRA (Gudang)</div>
+                <div class="harga-besar">Rp {acuan_data.get('Kopra', 0):,}</div>
+            </div>
+            """, unsafe_allow_html=True)
+        with c3:
+            st.markdown(f"""
+            <div class="acuan-box">
+                <div class="label-kecil">PINANG (Kupas)</div>
+                <div class="harga-besar">Rp {acuan_data.get('Pinang', 0):,}</div>
+            </div>
+            """, unsafe_allow_html=True)
     else:
-        st.warning("Data harga Padang belum diupdate Admin.")
+        st.warning("⚠️ Data Harga Padang belum diupdate Admin.")
 
-    st.divider()
-    
-    # TAMPILAN HARGA DESA (YANG DIINPUT WARGA)
-    st.markdown("### 🏝️ Laporan Harga di Desa (Mentawai)")
-    
-    if db:
-        docs = db.collection('mentawai_v2').order_by('waktu', direction=firestore.Query.DESCENDING).limit(50).stream()
-        data = [{"Komoditas": d.to_dict().get('item'), "Harga Desa": d.to_dict().get('harga_angka'), "Lokasi": d.to_dict().get('lokasi'), "Ket": d.to_dict().get('catatan', '-')} for d in docs]
-        
-        if data:
-            st.dataframe(pd.DataFrame(data), use_container_width=True)
-        else:
-            st.info("Belum ada laporan dari desa.")
-
-    # FITUR KHUSUS ADMIN (UPDATE HARGA PADANG)
+    # AREA ADMIN: UPDATE HARGA PADANG
     if is_admin:
-        st.divider()
-        st.markdown("### 🛠️ Update Harga Padang (Admin Only)")
-        with st.form("update_padang"):
-            h_cengkeh = st.number_input("Harga Cengkeh (Padang)", value=acuan_data.get('Cengkeh', 0))
-            h_kopra = st.number_input("Harga Kopra (Padang)", value=acuan_data.get('Kopra', 0))
-            h_pinang = st.number_input("Harga Pinang (Padang)", value=acuan_data.get('Pinang', 0))
+        with st.form("update_pusat"):
+            st.markdown("#### 🛠️ Update Harga Pusat (Admin Only)")
+            c_h1, c_h2, c_h3 = st.columns(3)
+            h_cengkeh = c_h1.number_input("Cengkeh", value=acuan_data.get('Cengkeh', 0))
+            h_kopra = c_h2.number_input("Kopra", value=acuan_data.get('Kopra', 0))
+            h_pinang = c_h3.number_input("Pinang", value=acuan_data.get('Pinang', 0))
             
-            if st.form_submit_button("Update Harga Acuan"):
+            if st.form_submit_button("Update Database Pusat"):
                 db.collection('settings').document('harga_padang').set({
                     "Cengkeh": h_cengkeh, "Kopra": h_kopra, "Pinang": h_pinang,
                     "updated_at": datetime.datetime.now()
                 })
-                st.success("Harga Acuan Diupdate!")
+                st.toast("Harga Pusat Berhasil Diupdate!")
                 st.rerun()
 
-# === HALAMAN 2: KALKULATOR FAIRNESS ===
-elif menu == "🧮 Cek Kewajaran Harga":
-    st.title("🧮 Kalkulator 'Cekik' Agen")
-    st.write("Cek apakah tawaran Pak Budi wajar atau sadis.")
+    st.divider()
     
-    kom = st.selectbox("Komoditas", ["Cengkeh", "Kopra", "Pinang"])
-    harga_padang = acuan_data.get(kom, 0)
-    
-    st.info(f"Harga di Padang saat ini: **Rp {harga_padang:,}**")
-    
-    tawaran = st.number_input("Berapa tawaran Pak Budi?", min_value=0, step=500)
-    
-    if tawaran > 0 and harga_padang > 0:
-        selisih = harga_padang - tawaran
-        persen_potongan = (selisih / harga_padang) * 100
-        
-        st.divider()
-        st.write(f"💸 Selisih (Keuntungan Agen + Ongkos): **Rp {selisih:,} /kg**")
-        st.write(f"✂️ Potongan: **{persen_potongan:.1f}%**")
-        
-        # LOGIKA KEWAJARAN (CONTOH KASAR)
-        if persen_potongan < 20:
-            st.success("✅ **SANGAT BAGUS!** Tawaran ini tinggi. Sikat bos!")
-        elif persen_potongan < 35:
-            st.info("👌 **WAJAR.** Mengingat ongkos kapal & buruh.")
-        elif persen_potongan < 50:
-            st.warning("⚠️ **AGAK RENDAH.** Coba tawar naik dikit.")
-        else:
-            st.error("🛑 **SADIS/MENCEKIK!** Potongannya lebih dari setengah harga. Awas tipu-tipu.")
-
-# === HALAMAN 3: INPUT HARGA DESA ===
-elif menu == "📝 Input Harga Desa":
-    st.title("📝 Lapor Harga Pak Budi")
-    with st.form("lapor_desa"):
-        item = st.selectbox("Komoditas", ["Cengkeh", "Kopra", "Pinang", "Lainnya"])
-        price = st.number_input("Tawaran Agen (Rp)", min_value=0)
-        loc = st.text_input("Desa/Dusun", placeholder="Cth: Taileleu")
-        note = st.text_input("Catatan (Opsional)", placeholder="Cth: Agen Pak Budi, belum deal")
-        
-        if st.form_submit_button("Kirim Laporan"):
-            db.collection('mentawai_v2').add({
-                "item": item, "harga_angka": price, "lokasi": loc, 
-                "catatan": note, "waktu": datetime.datetime.now()
+    # TABEL LAPORAN DESA
+    st.subheader("🏝️ Laporan Warga (Real-Time)")
+    if db:
+        docs = db.collection('mentawai_v2').order_by('waktu', direction=firestore.Query.DESCENDING).limit(50).stream()
+        data_table = []
+        for d in docs:
+            dt = d.to_dict()
+            # Format waktu simpel
+            waktu_str = dt.get('waktu').strftime("%d/%m %H:%M") if dt.get('waktu') else "-"
+            data_table.append({
+                "Komoditas": dt.get('item'),
+                "Harga Tawaran": f"Rp {dt.get('harga_angka', 0):,}",
+                "Lokasi": dt.get('lokasi'),
+                "Catatan": dt.get('catatan', '-'),
+                "Waktu": waktu_str
             })
-            st.success("Laporan terkirim!")
+            
+        if data_table:
+            st.dataframe(pd.DataFrame(data_table), use_container_width=True, hide_index=True)
+        else:
+            st.info("Belum ada laporan masuk. Jadilah yang pertama melapor!")
+
+# ================= MENU 2: KALKULATOR FAIRNESS =================
+elif menu == "🧮 Cek Kejujuran Agen":
+    st.title("🧮 Kalkulator Anti-Tipu")
+    st.write("Masukkan harga tawaran agen, sistem akan menghitung apakah itu wajar atau sadis.")
+    
+    col_kiri, col_kanan = st.columns([1,1])
+    
+    with col_kiri:
+        kom = st.selectbox("Pilih Komoditas:", ["Cengkeh", "Kopra", "Pinang"])
+        harga_pusat = acuan_data.get(kom, 0)
+        
+        st.info(f"Harga Patokan di Padang: **Rp {harga_pusat:,}**")
+        
+        tawaran = st.number_input("Tawaran Agen (Rp/Kg):", min_value=0, step=500)
+    
+    with col_kanan:
+        st.write("### 📊 Analisa Sistem:")
+        if tawaran > 0 and harga_pusat > 0:
+            selisih = harga_pusat - tawaran
+            persen = (selisih / harga_pusat) * 100
+            
+            st.metric("Keuntungan Agen + Ongkos", f"Rp {selisih:,} /kg")
+            
+            # LOGIKA VISUALISASI HASIL
+            if persen < 25:
+                st.markdown(f"""<div class="hasil-box success">✅ HARGA BAGUS!<br>Potongan cuma {persen:.1f}%.<br>Sikat Bos, ini tawaran tinggi!</div>""", unsafe_allow_html=True)
+            elif persen < 45:
+                st.markdown(f"""<div class="hasil-box warning">👌 HARGA WAJAR<br>Potongan {persen:.1f}%.<br>Masuk akal untuk ongkos & laba.</div>""", unsafe_allow_html=True)
+            else:
+                st.markdown(f"""<div class="hasil-box danger">🛑 HARGA SADIS / MENCEKIK!<br>Potongan {persen:.1f}%.<br>Agen ambil untung kegedean. Tawar lagi atau cari agen lain!</div>""", unsafe_allow_html=True)
+        else:
+            st.write("Waiting for input...")
+
+# ================= MENU 3: INPUT HARGA DESA =================
+elif menu == "📝 Lapor Harga Desa":
+    st.title("📝 Lapor Situasi Lapangan")
+    st.write("Bantu petani lain dengan melaporkan harga tawaran agen di tempatmu.")
+    
+    with st.form("form_lapor"):
+        c1, c2 = st.columns(2)
+        with c1:
+            in_item = st.selectbox("Komoditas", ["Cengkeh", "Kopra", "Pinang", "Lainnya"])
+            in_price = st.number_input("Harga Tawaran (Rp)", min_value=0, step=500)
+        with c2:
+            in_loc = st.text_input("Lokasi (Dusun/Desa)", placeholder="Cth: Taileleu")
+            in_note = st.text_input("Catatan (Nama Agen/Info Lain)", placeholder="Cth: Agen Pak Budi")
+            
+        if st.form_submit_button("Kirim Laporan 🚀"):
+            if in_price > 0 and in_loc:
+                db.collection('mentawai_v2').add({
+                    "item": in_item, 
+                    "harga_angka": in_price, 
+                    "lokasi": in_loc, 
+                    "catatan": in_note, 
+                    "waktu": datetime.datetime.now()
+                })
+                st.success("Laporan berhasil dikirim! Terima kasih sudah berkontribusi.")
+                import time
+                time.sleep(1)
+                st.rerun()
+            else:
+                st.error("Mohon isi Harga dan Lokasi.")
