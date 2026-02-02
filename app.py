@@ -15,11 +15,12 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# --- CSS VISUAL ---
+# --- CSS VISUAL (HILANGKAN JEJAK STREAMLIT) ---
 st.markdown("""
 <style>
     #MainMenu {visibility: hidden;}
     footer {visibility: hidden;}
+    header {visibility: hidden;}
     
     .acuan-box {
         background-color: #0e1117;
@@ -46,7 +47,6 @@ st.markdown("""
     .warning {background-color: #FFA500; color: black;} 
     .success {background-color: #00CC96;} 
     
-    /* Style Kartu Agen */
     .agen-card {
         background-color: #1E1E1E;
         border: 1px solid #444;
@@ -85,19 +85,16 @@ with st.sidebar:
 
     # === FORM LOGIN ===
     if not st.session_state.is_admin_logged_in:
-        # MENU USER BIASA
         menu = st.radio("Menu Warga:", ["🏠 Dashboard", "📞 Cari Toke/Agen", "🧮 Kalkulator Cuan", "📝 Lapor Harga"])
         st.divider()
         st.write("🔐 **Admin Area**")
-        
         with st.form("login_form"):
             pw = st.text_input("Password Admin:", type="password")
             submitted = st.form_submit_button("LOGIN")
-            
             if submitted:
                 pw_bersih = pw.strip()
                 if "admin_password" not in st.secrets:
-                    st.error("⚠️ EROR: Password belum disetting di Secrets!")
+                    st.error("⚠️ EROR: Password belum disetting!")
                 elif pw_bersih == st.secrets["admin_password"]:
                     st.success("✅ Login Berhasil!")
                     st.session_state.is_admin_logged_in = True
@@ -109,18 +106,7 @@ with st.sidebar:
     # === MENU ADMIN ===
     else:
         st.success("👤 Admin Mode")
-        # MENU LENGKAP ADMIN
-        menu = st.radio("Menu Admin:", [
-            "🏠 Dashboard", 
-            "📞 Cari Toke/Agen", # Admin juga bisa liat
-            "👥 Kelola Data Toke", # Menu Baru Admin
-            "🧮 Kalkulator Cuan", 
-            "📝 Lapor Harga", 
-            "📢 Update Berita", 
-            "⚙️ Update Harga", 
-            "📂 Download Data", 
-            "🗑️ Hapus Laporan"
-        ])
+        menu = st.radio("Menu Admin:", ["🏠 Dashboard", "📞 Cari Toke/Agen", "👥 Kelola Data Toke", "🧮 Kalkulator Cuan", "📝 Lapor Harga", "📢 Update Berita", "⚙️ Update Harga", "📂 Download Data", "🗑️ Hapus Laporan"])
         st.divider()
         if st.button("Logout"):
             st.session_state.is_admin_logged_in = False
@@ -128,7 +114,7 @@ with st.sidebar:
 
     st.divider()
     st.link_button("💬 Chat Admin (WA)", "https://wa.me/6281234567890") # GANTI NOMOR WA
-    st.caption("v9.0 - Direktori Toke")
+    st.caption("v10.0 - Expert Mode")
 
 # --- HELPER DATA ---
 def get_settings():
@@ -160,13 +146,11 @@ LIST_KOMODITAS = [
 # ================= MENU 1: DASHBOARD =================
 if menu == "🏠 Dashboard":
     st.title("📡 Pusat Pantauan Harga")
-    
     if settings_data.get('berita'):
         st.markdown(f"""<div class="berita-box"><h3>📢 INFO: {settings_data.get('tanggal_berita', '-')}</h3><p>{settings_data.get('berita')}</p></div>""", unsafe_allow_html=True)
     
     st.markdown("### 🏙️ Harga Acuan (Gudang Padang)")
     tab1, tab2, tab3 = st.tabs(["🌱 HASIL TANI", "🐟 HASIL LAUT", "🦅 HASIL HUTAN"])
-    
     with tab1:
         c1, c2, c3, c4 = st.columns(4)
         with c1: st.markdown(f"""<div class="acuan-box"><div class="label-kecil">CENGKEH SUPER</div><div class="harga-besar">Rp {acuan_data.get('Cengkeh Super', 0):,}</div></div>""", unsafe_allow_html=True)
@@ -202,80 +186,55 @@ if menu == "🏠 Dashboard":
                 st.line_chart(df_chart, x="Waktu", y="Harga", color="#00CC96")
         else: st.warning("Belum ada data grafik.")
 
-# ================= MENU BARU: CARI TOKE (USER) =================
+# ================= MENU 2: DIREKTORI TOKE =================
 elif menu == "📞 Cari Toke/Agen":
     st.title("📞 Direktori Toke & Agen")
-    st.write("Temukan pembeli terpercaya di sekitarmu. Hubungi mereka langsung!")
-    
-    # Filter Lokasi
     cari_lokasi = st.text_input("🔍 Cari berdasarkan Desa / Kecamatan:", placeholder="Contoh: Sikakap")
-    
     if db:
         agen_ref = db.collection('agen_mentawai').stream()
         data_agen = []
         for a in agen_ref:
             ad = a.to_dict()
-            # Filter Sederhana
             if cari_lokasi:
-                if cari_lokasi.lower() in ad.get('lokasi', '').lower():
-                    data_agen.append(ad)
-            else:
-                data_agen.append(ad)
+                if cari_lokasi.lower() in ad.get('lokasi', '').lower(): data_agen.append(ad)
+            else: data_agen.append(ad)
         
         if data_agen:
             for agen in data_agen:
                 with st.container():
-                    st.markdown(f"""
-                    <div class="agen-card">
-                        <h3>👤 {agen.get('nama', 'Tanpa Nama')}</h3>
-                        <p>📍 <b>Lokasi:</b> {agen.get('lokasi', '-')}</p>
-                        <p>📦 <b>Menerima:</b> {agen.get('barang', '-')}</p>
-                    </div>
-                    """, unsafe_allow_html=True)
-                    # Tombol WA
+                    st.markdown(f"""<div class="agen-card"><h3>👤 {agen.get('nama', 'Tanpa Nama')}</h3><p>📍 {agen.get('lokasi', '-')}</p><p>📦 {agen.get('barang', '-')}</p></div>""", unsafe_allow_html=True)
                     no_hp = agen.get('wa', '').replace("08", "628").replace("-", "").replace(" ", "")
-                    link_wa = f"https://wa.me/{no_hp}?text=Halo%20Bos,%20saya%20dapat%20info%20dari%20Mentawai%20Market.%20Mau%20tanya%20harga..."
-                    st.link_button(f"💬 Chat WA ({agen.get('wa')})", link_wa)
-        else:
-            st.info("Belum ada data Toke di lokasi ini.")
+                    st.link_button(f"💬 Chat WA ({agen.get('wa')})", f"https://wa.me/{no_hp}")
+        else: st.info("Tidak ada data.")
 
-# ================= MENU BARU: KELOLA TOKE (ADMIN ONLY) =================
 elif menu == "👥 Kelola Data Toke":
-    st.title("👥 Kelola Data Toke/Agen")
-    st.write("Tambahkan kontak Toke terpercaya biar petani gampang jual barang.")
-    
+    st.title("👥 Kelola Data Toke")
     with st.form("tambah_agen"):
-        nama = st.text_input("Nama Toke/Gudang")
-        lokasi = st.text_input("Lokasi (Desa/Kecamatan)")
-        wa = st.text_input("Nomor WA (Contoh: 0812xxx)")
-        barang = st.text_input("Barang yang diterima (Contoh: Cengkeh, Kopra)")
-        
-        if st.form_submit_button("Simpan Data Toke"):
+        nama = st.text_input("Nama Toke")
+        lokasi = st.text_input("Lokasi")
+        wa = st.text_input("Nomor WA")
+        barang = st.text_input("Menerima Barang")
+        if st.form_submit_button("Simpan"):
             if nama and wa:
-                db.collection('agen_mentawai').add({
-                    "nama": nama, "lokasi": lokasi, "wa": wa, "barang": barang,
-                    "added_at": datetime.datetime.now()
-                })
-                st.success("Data Toke tersimpan!")
-                time.sleep(1)
+                db.collection('agen_mentawai').add({"nama": nama, "lokasi": lokasi, "wa": wa, "barang": barang})
+                st.success("Tersimpan!")
                 st.rerun()
-    
     st.divider()
-    st.subheader("Daftar Toke Terdaftar")
     docs = db.collection('agen_mentawai').stream()
     for doc in docs:
         d = doc.to_dict()
         c1, c2 = st.columns([4,1])
-        with c1: st.write(f"**{d.get('nama')}** ({d.get('lokasi')}) - {d.get('wa')}")
+        with c1: st.write(f"**{d.get('nama')}** ({d.get('lokasi')})")
         with c2: 
             if st.button("Hapus", key=doc.id):
                 db.collection('agen_mentawai').document(doc.id).delete()
                 st.rerun()
 
-# ================= MENU: KALKULATOR =================
+# ================= MENU 3: KALKULATOR (UPGRADE V10) =================
 elif menu == "🧮 Kalkulator Cuan":
     st.title("🧮 Kalkulator Pintar")
-    tab_cek, tab_hitung = st.tabs(["🕵️ Cek Kejujuran Agen", "💰 Hitung Total Panen"])
+    tab_cek, tab_hitung, tab_susut = st.tabs(["🕵️ Cek Kejujuran", "💰 Hitung Pendapatan", "⚖️ Basah vs Kering"])
+    
     with tab_cek:
         c1, c2 = st.columns(2)
         with c1:
@@ -291,6 +250,7 @@ elif menu == "🧮 Kalkulator Cuan":
                 if persen < 20: st.markdown(f"""<div class="hasil-box success">✅ BAGUS!</div>""", unsafe_allow_html=True)
                 elif persen < 40: st.markdown(f"""<div class="hasil-box warning">👌 WAJAR</div>""", unsafe_allow_html=True)
                 else: st.markdown(f"""<div class="hasil-box danger">🛑 MENCEKIK!</div>""", unsafe_allow_html=True)
+    
     with tab_hitung:
         c3, c4 = st.columns(2)
         with c3:
@@ -301,7 +261,52 @@ elif menu == "🧮 Kalkulator Cuan":
                 total_duit = berat * harga_deal
                 st.markdown(f"""<div class="duit-box">Total Pendapatan:<br>Rp {total_duit:,}</div>""", unsafe_allow_html=True)
 
-# ================= MENU: LAPOR =================
+    with tab_susut:
+        st.write("### ⚖️ Estimasi Penyusutan (Jemur)")
+        st.caption("Cek apakah lebih untung jual basah atau kering?")
+        
+        col_s1, col_s2 = st.columns(2)
+        with col_s1:
+            jenis_susut = st.selectbox("Komoditas:", ["Cengkeh", "Pinang", "Kakao"])
+            berat_basah = st.number_input("Berat Basah (Kg):", min_value=1.0, step=1.0)
+            harga_jual_basah = st.number_input("Harga Jual Basah saat ini (Rp/Kg):", min_value=0, step=500)
+            
+        with col_s2:
+            # RUMUS PENYUSUTAN (ESTIMASI KASAR)
+            # Cengkeh: 100kg basah -> 30kg kering (Rendemen 30%)
+            # Pinang: 100kg basah -> 25kg kering (Rendemen 25%)
+            # Kakao: 100kg basah -> 35kg kering (Rendemen 35%)
+            
+            rendemen = 0.30
+            if jenis_susut == "Pinang": rendemen = 0.25
+            elif jenis_susut == "Kakao": rendemen = 0.35
+            
+            estimasi_kering = berat_basah * rendemen
+            
+            # Ambil harga kering otomatis dari database
+            harga_kering_db = 0
+            if jenis_susut == "Cengkeh": harga_kering_db = acuan_data.get("Cengkeh Biasa", 0)
+            elif jenis_susut == "Pinang": harga_kering_db = acuan_data.get("Pinang", 0)
+            elif jenis_susut == "Kakao": harga_kering_db = acuan_data.get("Kakao (Coklat)", 0)
+            
+            st.write(f"📉 **Estimasi Berat Kering:** {estimasi_kering:.1f} Kg")
+            st.write(f"💰 **Harga Kering (Padang):** Rp {harga_kering_db:,} /Kg")
+            
+            total_jual_basah = berat_basah * harga_jual_basah
+            total_jual_kering = estimasi_kering * harga_kering_db
+            
+            st.divider()
+            st.write(f"💵 Kalau Jual Basah: **Rp {total_jual_basah:,}**")
+            st.write(f"💎 Kalau Jual Kering: **Rp {total_jual_kering:,}**")
+            
+            selisih_untung = total_jual_kering - total_jual_basah
+            
+            if selisih_untung > 0:
+                st.success(f"🔥 LEBIH UNTUNG JUAL KERING! (Selisih +Rp {selisih_untung:,})")
+            else:
+                st.warning(f"⚠️ LEBIH UNTUNG JUAL BASAH (Harga kering lagi anjlok)")
+
+# ================= MENU 4: LAPOR =================
 elif menu == "📝 Lapor Harga":
     st.title("📝 Lapor Harga Lapangan")
     with st.form("lapor"):
