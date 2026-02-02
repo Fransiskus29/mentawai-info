@@ -46,6 +46,15 @@ st.markdown("""
     .warning {background-color: #FFA500; color: black;} 
     .success {background-color: #00CC96;} 
     
+    /* Style Kartu Agen */
+    .agen-card {
+        background-color: #1E1E1E;
+        border: 1px solid #444;
+        padding: 15px;
+        border-radius: 10px;
+        margin-bottom: 10px;
+    }
+    
     .footer-credit {
         position: fixed; left: 0; bottom: 0; width: 100%;
         background-color: #0e1117; color: #888; text-align: center;
@@ -67,7 +76,7 @@ def get_db():
     except: return None
 db = get_db()
 
-# --- SIDEBAR (LOGIN FIX V8.1) ---
+# --- SIDEBAR ---
 with st.sidebar:
     st.title("🌴 MENTAWAI MARKET")
     
@@ -76,7 +85,8 @@ with st.sidebar:
 
     # === FORM LOGIN ===
     if not st.session_state.is_admin_logged_in:
-        menu = st.radio("Menu:", ["🏠 Dashboard", "🧮 Kalkulator Cuan", "📝 Lapor Harga"])
+        # MENU USER BIASA
+        menu = st.radio("Menu Warga:", ["🏠 Dashboard", "📞 Cari Toke/Agen", "🧮 Kalkulator Cuan", "📝 Lapor Harga"])
         st.divider()
         st.write("🔐 **Admin Area**")
         
@@ -85,9 +95,7 @@ with st.sidebar:
             submitted = st.form_submit_button("LOGIN")
             
             if submitted:
-                # FIX: Hapus spasi otomatis biar gak error di HP
                 pw_bersih = pw.strip()
-                
                 if "admin_password" not in st.secrets:
                     st.error("⚠️ EROR: Password belum disetting di Secrets!")
                 elif pw_bersih == st.secrets["admin_password"]:
@@ -97,12 +105,22 @@ with st.sidebar:
                     st.rerun()
                 else:
                     st.error("❌ Password Salah!")
-                    st.caption("Cek huruf besar/kecil.")
 
-    # === MENU SETELAH LOGIN ===
+    # === MENU ADMIN ===
     else:
         st.success("👤 Admin Mode")
-        menu = st.radio("Menu:", ["🏠 Dashboard", "🧮 Kalkulator Cuan", "📝 Lapor Harga", "📢 Update Berita", "⚙️ Update Harga", "📂 Download Data", "🗑️ Hapus Data"])
+        # MENU LENGKAP ADMIN
+        menu = st.radio("Menu Admin:", [
+            "🏠 Dashboard", 
+            "📞 Cari Toke/Agen", # Admin juga bisa liat
+            "👥 Kelola Data Toke", # Menu Baru Admin
+            "🧮 Kalkulator Cuan", 
+            "📝 Lapor Harga", 
+            "📢 Update Berita", 
+            "⚙️ Update Harga", 
+            "📂 Download Data", 
+            "🗑️ Hapus Laporan"
+        ])
         st.divider()
         if st.button("Logout"):
             st.session_state.is_admin_logged_in = False
@@ -110,7 +128,7 @@ with st.sidebar:
 
     st.divider()
     st.link_button("💬 Chat Admin (WA)", "https://wa.me/6281234567890") # GANTI NOMOR WA
-    st.caption("v8.1 - Final Stable")
+    st.caption("v9.0 - Direktori Toke")
 
 # --- HELPER DATA ---
 def get_settings():
@@ -182,20 +200,83 @@ if menu == "🏠 Dashboard":
             df_chart = df[df['Barang'] == pilihan_grafik].copy()
             if not df_chart.empty:
                 st.line_chart(df_chart, x="Waktu", y="Harga", color="#00CC96")
-                with st.expander("Lihat Detail Tabel"):
-                    df_display = df_chart.sort_values(by="Waktu", ascending=False)
-                    df_display['Harga'] = df_display['Harga'].apply(lambda x: f"Rp {x:,}")
-                    df_display['Waktu'] = df_display['Waktu'].dt.strftime("%d %b %H:%M")
-                    st.dataframe(df_display[['Waktu', 'Harga', 'Lokasi', 'Catatan']], use_container_width=True, hide_index=True)
-            else: st.info("Data grafik belum cukup.")
-        else: st.warning("Belum ada data.")
+        else: st.warning("Belum ada data grafik.")
 
-# ================= MENU 2: KALKULATOR =================
+# ================= MENU BARU: CARI TOKE (USER) =================
+elif menu == "📞 Cari Toke/Agen":
+    st.title("📞 Direktori Toke & Agen")
+    st.write("Temukan pembeli terpercaya di sekitarmu. Hubungi mereka langsung!")
+    
+    # Filter Lokasi
+    cari_lokasi = st.text_input("🔍 Cari berdasarkan Desa / Kecamatan:", placeholder="Contoh: Sikakap")
+    
+    if db:
+        agen_ref = db.collection('agen_mentawai').stream()
+        data_agen = []
+        for a in agen_ref:
+            ad = a.to_dict()
+            # Filter Sederhana
+            if cari_lokasi:
+                if cari_lokasi.lower() in ad.get('lokasi', '').lower():
+                    data_agen.append(ad)
+            else:
+                data_agen.append(ad)
+        
+        if data_agen:
+            for agen in data_agen:
+                with st.container():
+                    st.markdown(f"""
+                    <div class="agen-card">
+                        <h3>👤 {agen.get('nama', 'Tanpa Nama')}</h3>
+                        <p>📍 <b>Lokasi:</b> {agen.get('lokasi', '-')}</p>
+                        <p>📦 <b>Menerima:</b> {agen.get('barang', '-')}</p>
+                    </div>
+                    """, unsafe_allow_html=True)
+                    # Tombol WA
+                    no_hp = agen.get('wa', '').replace("08", "628").replace("-", "").replace(" ", "")
+                    link_wa = f"https://wa.me/{no_hp}?text=Halo%20Bos,%20saya%20dapat%20info%20dari%20Mentawai%20Market.%20Mau%20tanya%20harga..."
+                    st.link_button(f"💬 Chat WA ({agen.get('wa')})", link_wa)
+        else:
+            st.info("Belum ada data Toke di lokasi ini.")
+
+# ================= MENU BARU: KELOLA TOKE (ADMIN ONLY) =================
+elif menu == "👥 Kelola Data Toke":
+    st.title("👥 Kelola Data Toke/Agen")
+    st.write("Tambahkan kontak Toke terpercaya biar petani gampang jual barang.")
+    
+    with st.form("tambah_agen"):
+        nama = st.text_input("Nama Toke/Gudang")
+        lokasi = st.text_input("Lokasi (Desa/Kecamatan)")
+        wa = st.text_input("Nomor WA (Contoh: 0812xxx)")
+        barang = st.text_input("Barang yang diterima (Contoh: Cengkeh, Kopra)")
+        
+        if st.form_submit_button("Simpan Data Toke"):
+            if nama and wa:
+                db.collection('agen_mentawai').add({
+                    "nama": nama, "lokasi": lokasi, "wa": wa, "barang": barang,
+                    "added_at": datetime.datetime.now()
+                })
+                st.success("Data Toke tersimpan!")
+                time.sleep(1)
+                st.rerun()
+    
+    st.divider()
+    st.subheader("Daftar Toke Terdaftar")
+    docs = db.collection('agen_mentawai').stream()
+    for doc in docs:
+        d = doc.to_dict()
+        c1, c2 = st.columns([4,1])
+        with c1: st.write(f"**{d.get('nama')}** ({d.get('lokasi')}) - {d.get('wa')}")
+        with c2: 
+            if st.button("Hapus", key=doc.id):
+                db.collection('agen_mentawai').document(doc.id).delete()
+                st.rerun()
+
+# ================= MENU: KALKULATOR =================
 elif menu == "🧮 Kalkulator Cuan":
     st.title("🧮 Kalkulator Pintar")
     tab_cek, tab_hitung = st.tabs(["🕵️ Cek Kejujuran Agen", "💰 Hitung Total Panen"])
     with tab_cek:
-        st.write("### Cek apakah harga agen wajar?")
         c1, c2 = st.columns(2)
         with c1:
             kom = st.selectbox("Barang:", LIST_KOMODITAS, key="cek_kom")
@@ -211,7 +292,6 @@ elif menu == "🧮 Kalkulator Cuan":
                 elif persen < 40: st.markdown(f"""<div class="hasil-box warning">👌 WAJAR</div>""", unsafe_allow_html=True)
                 else: st.markdown(f"""<div class="hasil-box danger">🛑 MENCEKIK!</div>""", unsafe_allow_html=True)
     with tab_hitung:
-        st.write("### Hitung estimasi pendapatan")
         c3, c4 = st.columns(2)
         with c3:
             berat = st.number_input("Berat Panen (Kg):", min_value=1, step=1)
@@ -221,7 +301,7 @@ elif menu == "🧮 Kalkulator Cuan":
                 total_duit = berat * harga_deal
                 st.markdown(f"""<div class="duit-box">Total Pendapatan:<br>Rp {total_duit:,}</div>""", unsafe_allow_html=True)
 
-# ================= MENU 3: LAPOR =================
+# ================= MENU: LAPOR =================
 elif menu == "📝 Lapor Harga":
     st.title("📝 Lapor Harga Lapangan")
     with st.form("lapor"):
@@ -236,7 +316,7 @@ elif menu == "📝 Lapor Harga":
                 time.sleep(1)
                 st.rerun()
 
-# ================= MENU 4: UPDATE BERITA =================
+# ================= MENU ADMIN LAINNYA =================
 elif menu == "📢 Update Berita":
     st.title("📢 Update Kabar Pasar")
     current_news = settings_data.get('berita', '')
@@ -247,7 +327,6 @@ elif menu == "📢 Update Berita":
             st.success("Berita Terbit!")
             st.rerun()
 
-# ================= MENU 5: UPDATE HARGA =================
 elif menu == "⚙️ Update Harga":
     st.title("⚙️ Update Harga Pusat")
     st.link_button("🔍 Cek Google", "https://www.google.com/search?q=harga+komoditas+sumatera+barat+hari+ini")
@@ -256,14 +335,12 @@ elif menu == "⚙️ Update Harga":
         updates = {}
         for item in LIST_KOMODITAS:
             updates[item] = st.number_input(f"{item}", value=acuan_data.get(item, 0))
-        
         if st.form_submit_button("SIMPAN SEMUA"):
             updates["updated_at"] = datetime.datetime.now()
             db.collection('settings').document('harga_padang').set(updates, merge=True)
             st.success("Tersimpan!")
             st.rerun()
 
-# ================= MENU 6: DOWNLOAD DATA =================
 elif menu == "📂 Download Data":
     st.title("📂 Download Arsip Data")
     if db:
@@ -271,20 +348,16 @@ elif menu == "📂 Download Data":
         data_dl = []
         for d in docs:
             dt = d.to_dict()
-            data_dl.append({
-                "Tanggal": dt.get('waktu').strftime("%Y-%m-%d %H:%M:%S") if dt.get('waktu') else "-",
-                "Komoditas": dt.get('item'), "Harga": dt.get('harga_angka'), "Lokasi": dt.get('lokasi'), "Catatan": dt.get('catatan')
-            })
+            data_dl.append({"Tanggal": dt.get('waktu').strftime("%Y-%m-%d") if dt.get('waktu') else "-", "Komoditas": dt.get('item'), "Harga": dt.get('harga_angka'), "Lokasi": dt.get('lokasi')})
         df_download = pd.DataFrame(data_dl)
         if not df_download.empty:
             st.dataframe(df_download.head(), use_container_width=True)
             csv = df_download.to_csv(index=False).encode('utf-8')
-            st.download_button(label="📥 DOWNLOAD FILE CSV", data=csv, file_name=f'laporan_{datetime.datetime.now().strftime("%Y%m%d")}.csv', mime='text/csv')
+            st.download_button(label="📥 DOWNLOAD CSV", data=csv, file_name=f'laporan_{datetime.datetime.now().strftime("%Y%m%d")}.csv', mime='text/csv')
         else: st.warning("Belum ada data.")
 
-# ================= MENU 7: HAPUS DATA =================
-elif menu == "🗑️ Hapus Data":
-    st.title("🗑️ Hapus Laporan")
+elif menu == "🗑️ Hapus Laporan":
+    st.title("🗑️ Hapus Laporan Sampah")
     docs = db.collection('mentawai_v2').order_by('waktu', direction=firestore.Query.DESCENDING).limit(20).stream()
     for doc in docs:
         d = doc.to_dict()
