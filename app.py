@@ -17,7 +17,7 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# DAFTAR KOMODITAS (SUDAH DIPISAH BASAH/KERING)
+# LIST KOMODITAS (DETAIL BASAH/KERING)
 LIST_KOMODITAS = [
     # CENGKEH
     "Cengkeh Super (Kering)", "Cengkeh Biasa (Asalan)", "Gagang Cengkeh", "Minyak Cengkeh",
@@ -63,6 +63,7 @@ def inject_custom_css():
         .alert-box { padding: 15px; border-radius: 8px; margin-bottom: 10px; }
         .success { background: rgba(0, 204, 150, 0.15); border-left: 4px solid #00CC96; }
         .warning { background: rgba(255, 165, 0, 0.15); border-left: 4px solid #FFA500; }
+        .danger { background: rgba(255, 75, 75, 0.15); border-left: 4px solid #FF4B4B; }
         
         .footer-pro {
             position: fixed; left: 0; bottom: 0; width: 100%;
@@ -227,28 +228,24 @@ def render_calculator():
         colA, colB = st.columns(2)
         with colA:
             ts = st.selectbox("Jenis", ["Cengkeh", "Kopra", "Pinang"])
-            ww = st.number_input("Berat Basah (Kg)", 1.0); wp = st.number_input("Jual Basah (Rp)", 0)
+            ww = st.number_input("Berat Basah", 1.0); wp = st.number_input("Jual Basah", 0)
         with colB:
-            # Logic Rendemen
-            r = {"Cengkeh": 0.30, "Kopra": 0.50, "Pinang": 0.25} # Kopra sekitar 50% dari kelapa basah/asalan
+            r = {"Cengkeh": 0.30, "Kopra": 0.50, "Pinang": 0.25}
             dw = ww * r[ts]
-            
-            # Auto fetch price kering
             dp = 0
             if ts == "Cengkeh": dp = acuan_data.get("Cengkeh Super (Kering)", 0)
             elif ts == "Kopra": dp = acuan_data.get("Kopra Gudang (Kering)", 0)
             elif ts == "Pinang": dp = acuan_data.get("Pinang Kering (Biji)", 0)
             
             dt = dw * dp; wt = ww * wp
-            st.write(f"📉 Jadi Kering: {dw:.1f} Kg")
-            st.write(f"💵 Kalau Jual Basah: Rp {wt:,}")
-            st.write(f"💎 Kalau Jual Kering: Rp {dt:,}")
-            if dt > wt: st.success(f"🔥 KERING LEBIH UNTUNG (+Rp {dt-wt:,})")
+            st.write(f"📉 Jadi Kering: {dw:.1f} Kg | Rp {dt:,}"); st.write(f"💵 Kalau Basah: Rp {wt:,}")
+            if dt > wt: st.success(f"🔥 KERING UNTUNG +Rp {dt-wt:,}")
             else: st.warning("⚠️ JUAL BASAH SAJA")
 
 def render_admin():
     st.title("🛠️ Panel Admin")
-    tab1, tab2, tab3, tab4, tab5 = st.tabs(["⚙️ Harga", "📢 Promosi WA", "👥 Toke", "📰 Berita", "📂 Data"])
+    # MENU MODERASI DITAMBAHKAN DI SINI
+    tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs(["⚙️ Harga", "👮‍♂️ Moderasi", "📢 Promosi WA", "👥 Toke", "📰 Berita", "📂 Data"])
     
     with tab1:
         with st.form("upd_price"):
@@ -260,8 +257,42 @@ def render_admin():
                 db.collection('settings').document('harga_padang').set(updates, merge=True)
                 st.toast("Harga tersimpan!", icon="✅"); time.sleep(1); st.rerun()
 
-    # GENERATOR WA YANG SUDAH DISESUAIKAN
+    # FITUR BARU: MODERASI (HAPUS DATA SAMPAH)
     with tab2:
+        st.subheader("👮‍♂️ Satpol PP Digital (Hapus Data)")
+        tipe_hapus = st.radio("Apa yang mau dihapus?", ["Laporan Warga (Spam)", "Daftar Toke (Tutup/Penipu)"])
+        
+        if tipe_hapus == "Laporan Warga (Spam)":
+            st.caption("Hapus laporan harga yang ngawur/salah input.")
+            if db:
+                docs = db.collection('mentawai_v2').order_by('waktu', direction=firestore.Query.DESCENDING).limit(10).stream()
+                for doc in docs:
+                    d = doc.to_dict()
+                    with st.container():
+                        c1, c2 = st.columns([4,1])
+                        with c1: 
+                            st.markdown(f"**{d.get('item')}** - Rp {d.get('harga_angka', 0):,}")
+                            st.caption(f"📍 {d.get('lokasi')} | {d.get('waktu').strftime('%d/%m %H:%M')}")
+                        with c2:
+                            if st.button("🗑️ Hapus", key=doc.id):
+                                db.collection('mentawai_v2').document(doc.id).delete()
+                                st.toast("Data dihapus!"); time.sleep(1); st.rerun()
+        
+        elif tipe_hapus == "Daftar Toke (Tutup/Penipu)":
+            st.caption("Hapus Toke yang sudah tidak aktif.")
+            if db:
+                docs = db.collection('agen_mentawai').stream()
+                for doc in docs:
+                    d = doc.to_dict()
+                    with st.container():
+                        c1, c2 = st.columns([4,1])
+                        with c1: st.write(f"**{d.get('nama')}** ({d.get('lokasi')})")
+                        with c2:
+                            if st.button("🗑️ Hapus", key=f"toke_{doc.id}"):
+                                db.collection('agen_mentawai').document(doc.id).delete()
+                                st.toast("Toke dihapus!"); time.sleep(1); st.rerun()
+
+    with tab3:
         st.subheader("📢 Broadcast WA")
         tgl_skrg = datetime.datetime.now().strftime("%d %B %Y")
         pesan_wa = f"""*INFO HARGA MENTAWAI MARKET* 🌴
@@ -273,16 +304,13 @@ def render_admin():
 🥥 *Kopra Gudang (Kering):* Rp {acuan_data.get('Kopra Gudang (Kering)', 0):,}
 💧 *Kopra Basah:* Rp {acuan_data.get('Kopra Asalan (Basah)', 0):,}
 
-🌰 *Pinang Kering:* Rp {acuan_data.get('Pinang Kering (Biji)', 0):,}
-
-_Cek selengkapnya di:_
+_Cek selengkapnya:_
 👉 https://pasarmentawai.streamlit.app"""
-        
         st.text_area("Copy Teks:", value=pesan_wa, height=300)
         encoded_wa = urllib.parse.quote(pesan_wa)
         st.link_button("📤 Kirim WA", f"https://wa.me/?text={encoded_wa}")
 
-    with tab3:
+    with tab4:
         with st.form("add_ag"):
             nm = st.text_input("Nama"); lc = st.text_input("Lokasi")
             wa = st.text_input("WA"); br = st.text_input("Barang")
@@ -290,14 +318,14 @@ _Cek selengkapnya di:_
                 db.collection('agen_mentawai').add({"nama": nm, "lokasi": lc, "wa": wa, "barang": br})
                 st.success("Toke ditambahkan.")
 
-    with tab4:
+    with tab5:
         curr = settings_data.get('berita', '')
         news = st.text_area("Berita", curr)
         if st.button("Terbitkan"):
             db.collection('settings').document('general').set({"berita": news, "tanggal_berita": datetime.datetime.now().strftime("%d %b")})
             st.rerun()
             
-    with tab5:
+    with tab6:
         if st.button("📥 Download CSV"):
             if db:
                 docs = db.collection('mentawai_v2').stream()
@@ -328,7 +356,7 @@ def main():
                     if "admin_password" in st.secrets and pw.strip() == st.secrets["admin_password"]:
                         st.session_state.is_admin = True; st.rerun()
                     else: st.error("Salah password")
-        st.divider(); st.caption("v15.1 - Detail List")
+        st.divider(); st.caption("v16.0 - Control Panel")
 
     if nav == "Dashboard": render_dashboard()
     elif nav == "Kalkulator": render_calculator()
