@@ -17,11 +17,18 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# LIST KOMODITAS
+# DAFTAR KOMODITAS (SUDAH DIPISAH BASAH/KERING)
 LIST_KOMODITAS = [
-    "Cengkeh Super", "Cengkeh Biasa", "Gagang Cengkeh", "Minyak Cengkeh",
-    "Kopra", "Pinang", "Kakao (Coklat)", "Sagu", "Nilam", "Gambir",
+    # CENGKEH
+    "Cengkeh Super (Kering)", "Cengkeh Biasa (Asalan)", "Gagang Cengkeh", "Minyak Cengkeh",
+    # KELAPA & TURUNAN
+    "Kopra Gudang (Kering)", "Kopra Asalan (Basah)", "Kelapa Butir",
+    # PINANG & LAINNYA
+    "Pinang Kering (Biji)", "Pinang Basah (Kupas)",
+    "Kakao (Coklat)", "Sagu", "Nilam", "Gambir",
+    # HASIL LAUT
     "Gurita", "Lobster", "Kerapu", "Teripang", "Ikan Asin",
+    # HASIL HUTAN
     "Sarang Walet", "Manau (Rotan)", "Madu Hutan"
 ]
 
@@ -51,7 +58,7 @@ def inject_custom_css():
         }
 
         .price-tag { font-size: 26px; font-weight: 800; color: #00CC96; margin-top: 5px; }
-        .label-small { font-size: 12px; opacity: 0.7; text-transform: uppercase; letter-spacing: 1px; }
+        .label-small { font-size: 11px; opacity: 0.7; text-transform: uppercase; letter-spacing: 1px; }
         
         .alert-box { padding: 15px; border-radius: 8px; margin-bottom: 10px; }
         .success { background: rgba(0, 204, 150, 0.15); border-left: 4px solid #00CC96; }
@@ -103,7 +110,6 @@ acuan_data = get_data_safe('settings', 'harga_padang')
 def render_dashboard():
     st.title("📡 Pusat Pantauan Harga")
     
-    # Berita Berjalan
     if settings_data.get('berita'):
         st.markdown(f"""
         <div class="alert-box warning">
@@ -112,7 +118,6 @@ def render_dashboard():
         </div>
         """, unsafe_allow_html=True)
 
-    # Grid Harga
     st.subheader("🏙️ Harga Acuan (Gudang Padang)")
     tabs = st.tabs(["🌱 TANI", "🐟 LAUT", "🦅 HUTAN"])
     
@@ -126,9 +131,20 @@ def render_dashboard():
         """, unsafe_allow_html=True)
 
     with tabs[0]: 
-        c1, c2 = st.columns(2)
-        with c1: show_card("Cengkeh Super", "Cengkeh Super"); show_card("Kopra", "Kopra")
-        with c2: show_card("Cengkeh Biasa", "Cengkeh Biasa"); show_card("Pinang", "Pinang")
+        c1, c2, c3 = st.columns(3)
+        with c1: 
+            show_card("Cengkeh Super", "Cengkeh Super (Kering)")
+            show_card("Kopra Gudang", "Kopra Gudang (Kering)")
+            show_card("Pinang Kering", "Pinang Kering (Biji)")
+        with c2: 
+            show_card("Cengkeh Asalan", "Cengkeh Biasa (Asalan)")
+            show_card("Kopra Basah", "Kopra Asalan (Basah)")
+            show_card("Pinang Basah", "Pinang Basah (Kupas)")
+        with c3:
+            show_card("Kelapa Butir", "Kelapa Butir")
+            show_card("Gagang Cengkeh", "Gagang Cengkeh")
+            show_card("Kakao", "Kakao (Coklat)")
+
     with tabs[1]:
         c1, c2 = st.columns(2)
         with c1: show_card("Gurita", "Gurita"); show_card("Lobster", "Lobster")
@@ -137,7 +153,6 @@ def render_dashboard():
         c1, c2 = st.columns(2)
         with c1: show_card("Sarang Walet", "Sarang Walet"); show_card("Manau", "Manau (Rotan)")
 
-    # Grafik & Tabel Laporan Warga
     st.divider()
     c_grafik, c_tabel = st.columns([2, 1])
     
@@ -158,9 +173,7 @@ def render_dashboard():
     with c_tabel:
         st.subheader("📋 Laporan Warga")
         if 'df' in locals() and not df.empty:
-            # Tampilkan 5 laporan terakhir
             df_display = df.sort_values(by="Waktu", ascending=False).head(5)
-            # Format tampilan sederhana
             for index, row in df_display.iterrows():
                 st.markdown(f"""
                 <div style="border-bottom:1px solid #333; padding:10px 0;">
@@ -213,58 +226,61 @@ def render_calculator():
     with t2:
         colA, colB = st.columns(2)
         with colA:
-            ts = st.selectbox("Jenis", ["Cengkeh", "Pinang", "Kakao"])
-            ww = st.number_input("Berat Basah", 1.0); wp = st.number_input("Jual Basah", 0)
+            ts = st.selectbox("Jenis", ["Cengkeh", "Kopra", "Pinang"])
+            ww = st.number_input("Berat Basah (Kg)", 1.0); wp = st.number_input("Jual Basah (Rp)", 0)
         with colB:
-            r = {"Cengkeh": 0.30, "Pinang": 0.25, "Kakao": 0.35}
+            # Logic Rendemen
+            r = {"Cengkeh": 0.30, "Kopra": 0.50, "Pinang": 0.25} # Kopra sekitar 50% dari kelapa basah/asalan
             dw = ww * r[ts]
+            
+            # Auto fetch price kering
             dp = 0
-            if ts == "Cengkeh": dp = acuan_data.get("Cengkeh Biasa", 0)
-            elif ts == "Pinang": dp = acuan_data.get("Pinang", 0)
-            elif ts == "Kakao": dp = acuan_data.get("Kakao (Coklat)", 0)
+            if ts == "Cengkeh": dp = acuan_data.get("Cengkeh Super (Kering)", 0)
+            elif ts == "Kopra": dp = acuan_data.get("Kopra Gudang (Kering)", 0)
+            elif ts == "Pinang": dp = acuan_data.get("Pinang Kering (Biji)", 0)
+            
             dt = dw * dp; wt = ww * wp
-            st.write(f"📉 Kering: {dw:.1f} Kg | Rp {dt:,}"); st.write(f"💵 Basah: Rp {wt:,}")
-            if dt > wt: st.success(f"🔥 KERING UNTUNG +Rp {dt-wt:,}")
+            st.write(f"📉 Jadi Kering: {dw:.1f} Kg")
+            st.write(f"💵 Kalau Jual Basah: Rp {wt:,}")
+            st.write(f"💎 Kalau Jual Kering: Rp {dt:,}")
+            if dt > wt: st.success(f"🔥 KERING LEBIH UNTUNG (+Rp {dt-wt:,})")
             else: st.warning("⚠️ JUAL BASAH SAJA")
 
 def render_admin():
     st.title("🛠️ Panel Admin")
-    # MENU BARU: 📢 PROMOSI WA
     tab1, tab2, tab3, tab4, tab5 = st.tabs(["⚙️ Harga", "📢 Promosi WA", "👥 Toke", "📰 Berita", "📂 Data"])
     
     with tab1:
         with st.form("upd_price"):
             updates = {}
+            st.write("Update harga sesuai kategori:")
             for item in LIST_KOMODITAS:
                 updates[item] = st.number_input(item, value=acuan_data.get(item, 0))
             if st.form_submit_button("Simpan Harga"):
                 db.collection('settings').document('harga_padang').set(updates, merge=True)
                 st.toast("Harga tersimpan!", icon="✅"); time.sleep(1); st.rerun()
 
-    # FITUR BARU V15: GENERATOR WA
+    # GENERATOR WA YANG SUDAH DISESUAIKAN
     with tab2:
-        st.subheader("📢 Buat Pesan Broadcast WA")
-        st.caption("Copy pesan ini untuk disebar ke Grup Petani.")
-        
+        st.subheader("📢 Broadcast WA")
         tgl_skrg = datetime.datetime.now().strftime("%d %B %Y")
-        pesan_wa = f"""*UPDATE HARGA MENTAWAI MARKET* 🌴
+        pesan_wa = f"""*INFO HARGA MENTAWAI MARKET* 🌴
 🗓️ *{tgl_skrg}*
 
-💎 *Cengkeh Super:* Rp {acuan_data.get('Cengkeh Super', 0):,}
-🍂 *Cengkeh Biasa:* Rp {acuan_data.get('Cengkeh Biasa', 0):,}
-🥥 *Kopra:* Rp {acuan_data.get('Kopra', 0):,}
-🌰 *Pinang:* Rp {acuan_data.get('Pinang', 0):,}
+💎 *Cengkeh Super (Kering):* Rp {acuan_data.get('Cengkeh Super (Kering)', 0):,}
+🍂 *Cengkeh Asalan:* Rp {acuan_data.get('Cengkeh Biasa (Asalan)', 0):,}
 
-_Cek harga lainnya & kontak Toke di aplikasi:_
-👉 https://pasarmentawai.streamlit.app
+🥥 *Kopra Gudang (Kering):* Rp {acuan_data.get('Kopra Gudang (Kering)', 0):,}
+💧 *Kopra Basah:* Rp {acuan_data.get('Kopra Asalan (Basah)', 0):,}
 
-*#MentawaiBangkit*"""
+🌰 *Pinang Kering:* Rp {acuan_data.get('Pinang Kering (Biji)', 0):,}
+
+_Cek selengkapnya di:_
+👉 https://pasarmentawai.streamlit.app"""
         
-        st.text_area("Teks Siap Copy:", value=pesan_wa, height=300)
-        
-        # Tombol Langsung Buka WA (Optional)
+        st.text_area("Copy Teks:", value=pesan_wa, height=300)
         encoded_wa = urllib.parse.quote(pesan_wa)
-        st.link_button("📤 Kirim ke WhatsApp (Langsung)", f"https://wa.me/?text={encoded_wa}")
+        st.link_button("📤 Kirim WA", f"https://wa.me/?text={encoded_wa}")
 
     with tab3:
         with st.form("add_ag"):
@@ -312,7 +328,7 @@ def main():
                     if "admin_password" in st.secrets and pw.strip() == st.secrets["admin_password"]:
                         st.session_state.is_admin = True; st.rerun()
                     else: st.error("Salah password")
-        st.divider(); st.caption("v15.0 Viral Update")
+        st.divider(); st.caption("v15.1 - Detail List")
 
     if nav == "Dashboard": render_dashboard()
     elif nav == "Kalkulator": render_calculator()
