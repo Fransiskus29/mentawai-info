@@ -27,38 +27,41 @@ LIST_KOMODITAS = [
     "Sarang Walet", "Manau (Rotan)", "Madu Hutan"
 ]
 
-# DATABASE GAMBAR & EDUKASI (ALA INDOTRADING)
+# DATA GAMBAR & EDUKASI
 INFO_KOMODITAS = {
     "Cengkeh Super (Kering)": {
         "img": "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a2/Clove_in_white_background.jpg/640px-Clove_in_white_background.jpg",
-        "desc": "Cengkeh kering sempurna, warna coklat tua/hitam, bersih tanpa jamur. Kadar air rendah.",
-        "guna": "Bahan utama rokok kretek premium, bumbu masakan ekspor, dan minyak atsiri."
+        "desc": "Cengkeh kering sempurna, warna coklat tua/hitam, bersih. Kadar air rendah.",
+        "guna": "Bahan rokok kretek premium, bumbu, dan minyak atsiri."
     },
     "Cengkeh Biasa (Asalan)": {
         "img": "https://asset.kompas.com/crops/O2yq2Gv7W2qQ9Z2q9Z2q9Z2q9Z2=/0x0:1000x667/750x500/data/photo/2020/05/12/5eba5a5a5a5a5.jpg",
-        "desc": "Cengkeh yang masih agak basah (lembab) atau warnanya pudar/kemerahan. Sering tercampur gagang.",
-        "guna": "Tetap laku untuk pabrik, tapi harga kena potongan (rafaksi) karena susut berat."
+        "desc": "Cengkeh agak basah/lembab, warna pudar. Sering tercampur gagang.",
+        "guna": "Tetap laku tapi harga kena rafaksi (potongan) susut."
     },
     "Kopra Gudang (Kering)": {
         "img": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/6d/Coconut_meat.jpg/640px-Coconut_meat.jpg",
-        "desc": "Daging kelapa cungkil yang dikeringkan (jemur/oven) sampai kadar air <5%. Warna putih/abu.",
-        "guna": "Bahan baku minyak goreng kualitas tinggi (CCO) dan bahan kosmetik/sabun."
+        "desc": "Daging kelapa kering (kadar air <5%), warna putih/abu bersih.",
+        "guna": "Bahan baku minyak goreng (CCO) dan kosmetik."
     },
     "Kopra Asalan (Basah)": {
         "img": "https://awsimages.detik.net.id/community/media/visual/2022/04/18/kopra-putih-di-biak-numfor-papua-1.jpeg?w=700&q=90",
-        "desc": "Kopra yang baru diasap atau dijemur sebentar. Kadar air tinggi, rawan jamur.",
-        "guna": "Bahan baku minyak goreng curah, pakan ternak. Harga fluktuatif."
+        "desc": "Kopra baru diasap/jemur sebentar. Kadar air tinggi.",
+        "guna": "Minyak curah, pakan ternak. Harga fluktuatif."
     },
     "Pinang Kering (Biji)": {
         "img": "https://asset.kompas.com/crops/O2yq2Gv7W2qQ9Z2q9Z2q9Z2q9Z2=/0x0:1000x667/750x500/data/photo/2021/03/15/604f0a5a5a5a5.jpg",
-        "desc": "Biji pinang belah yang sudah dijemur kering keras (batu).",
-        "guna": "Pewarna alami tekstil, bahan permen, dan komoditas ekspor ke India/Pakistan."
+        "desc": "Biji pinang belah kering keras (batu).",
+        "guna": "Pewarna tekstil, permen, ekspor India."
     }
 }
 DEFAULT_IMG = "https://via.placeholder.com/300x200.png?text=Mentawai+Market"
 
+# DAFTAR KAPAL
+LIST_KAPAL = ["Mentawai Fast", "KMP Ambu-Ambu", "KMP Gambolo", "Sabuk Nusantara", "Kapal Perintis"]
+
 # ==========================================
-# 2. FRONT-END ENGINE (CSS PRO V18)
+# 2. FRONT-END ENGINE (CSS PRO V19)
 # ==========================================
 def inject_custom_css():
     st.markdown("""
@@ -67,6 +70,32 @@ def inject_custom_css():
         footer {visibility: hidden;}
         header[data-testid="stHeader"] { background-color: transparent; z-index: 1; }
 
+        /* Running Text Style */
+        .marquee-container {
+            width: 100%;
+            background-color: #222;
+            color: #FFA500;
+            padding: 10px;
+            white-space: nowrap;
+            overflow: hidden;
+            box-sizing: border-box;
+            border-bottom: 2px solid #FFA500;
+            margin-bottom: 20px;
+        }
+        .marquee {
+            display: inline-block;
+            padding-left: 100%;
+            animation: marquee 20s linear infinite;
+            font-weight: bold;
+            font-family: monospace;
+            font-size: 16px;
+        }
+        @keyframes marquee {
+            0%   { transform: translate(0, 0); }
+            100% { transform: translate(-100%, 0); }
+        }
+
+        /* Card Style */
         .card-container {
             background: rgba(255, 255, 255, 0.05);
             backdrop-filter: blur(10px);
@@ -82,27 +111,24 @@ def inject_custom_css():
             box-shadow: 0 4px 20px rgba(0, 204, 150, 0.15);
         }
 
-        .price-row { display: flex; justify-content: space-between; align-items: center; }
         .price-tag { font-size: 22px; font-weight: 800; color: #00CC96; }
         .label-small { font-size: 11px; opacity: 0.7; text-transform: uppercase; letter-spacing: 1px; }
         
-        /* Indikator Tren */
-        .trend-up { color: #00CC96; background: rgba(0, 204, 150, 0.1); padding: 2px 6px; border-radius: 4px; font-size: 12px; font-weight: bold; }
-        .trend-down { color: #FF4B4B; background: rgba(255, 75, 75, 0.1); padding: 2px 6px; border-radius: 4px; font-size: 12px; font-weight: bold; }
-        .trend-flat { color: #888; background: rgba(128, 128, 128, 0.1); padding: 2px 6px; border-radius: 4px; font-size: 12px; font-weight: bold; }
+        .trend-up { color: #00CC96; background: rgba(0, 204, 150, 0.1); padding: 2px 6px; border-radius: 4px; font-size: 11px; font-weight: bold; }
+        .trend-down { color: #FF4B4B; background: rgba(255, 75, 75, 0.1); padding: 2px 6px; border-radius: 4px; font-size: 11px; font-weight: bold; }
+        .trend-flat { color: #888; background: rgba(128, 128, 128, 0.1); padding: 2px 6px; border-radius: 4px; font-size: 11px; font-weight: bold; }
 
         .info-title { color: #FFA500; font-weight: bold; font-size: 14px; margin-bottom: 5px; }
-        .alert-box { padding: 15px; border-radius: 8px; margin-bottom: 10px; }
-        .warning { background: rgba(255, 165, 0, 0.15); border-left: 4px solid #FFA500; }
+        
+        /* Status Kapal Badges */
+        .ship-ok { background: #00CC96; color: black; padding: 5px 10px; border-radius: 4px; font-weight: bold; font-size: 12px; }
+        .ship-bad { background: #FF4B4B; color: white; padding: 5px 10px; border-radius: 4px; font-weight: bold; font-size: 12px; }
+        .ship-warn { background: #FFA500; color: black; padding: 5px 10px; border-radius: 4px; font-weight: bold; font-size: 12px; }
         
         .footer-pro {
             position: fixed; left: 0; bottom: 0; width: 100%;
             background: #0e1117; color: #666; text-align: center;
             padding: 6px; font-size: 11px; border-top: 1px solid #333; z-index: 999;
-        }
-        
-        @media (max-width: 600px) {
-            .price-tag { font-size: 20px; }
         }
     </style>
     """, unsafe_allow_html=True)
@@ -133,45 +159,60 @@ def get_data_safe(collection, doc_id):
 
 settings_data = get_data_safe('settings', 'general')
 acuan_data = get_data_safe('settings', 'harga_padang')
+logistik_data = get_data_safe('settings', 'logistik') # DB BARU BUAT KAPAL
 
 # ==========================================
 # 4. MODULAR PAGES
 # ==========================================
 
 def render_dashboard():
+    # 1. RUNNING TEXT (TV STYLE)
+    berita_kilat = settings_data.get('berita', 'Selamat Datang di Mentawai Smart Market')
+    st.markdown(f"""
+    <div class="marquee-container">
+        <div class="marquee">📢 INFO TERKINI: {berita_kilat} &nbsp;&nbsp;&nbsp; | &nbsp;&nbsp;&nbsp; 🚢 UPDATE LOGISTIK: Cek Status Kapal di bawah...</div>
+    </div>
+    """, unsafe_allow_html=True)
+
     st.title("📡 Pusat Pantauan Harga")
     
-    if settings_data.get('berita'):
-        st.markdown(f"""
-        <div class="alert-box warning">
-            <h4 style="margin:0;">📢 INFO PASAR ({settings_data.get('tanggal_berita', '-')})</h4>
-            <p style="margin:5px 0 0 0;">{settings_data.get('berita')}</p>
-        </div>
-        """, unsafe_allow_html=True)
+    # 2. PANEL STATUS KAPAL (BARU)
+    with st.expander("🚢 STATUS KAPAL & LOGISTIK (Klik untuk Info)", expanded=True):
+        cols = st.columns(len(LIST_KAPAL))
+        for i, nama_kapal in enumerate(LIST_KAPAL):
+            status = logistik_data.get(nama_kapal, "Jadwal Normal")
+            warna_class = "ship-ok"
+            if "Batal" in status or "Rusak" in status: warna_class = "ship-bad"
+            elif "Docking" in status or "Tunda" in status: warna_class = "ship-warn"
+            
+            with cols[i]:
+                st.markdown(f"""
+                <div style="text-align:center; border:1px solid #444; padding:10px; border-radius:8px;">
+                    <small>{nama_kapal}</small><br>
+                    <span class="{warna_class}">{status}</span>
+                </div>
+                """, unsafe_allow_html=True)
 
+    st.divider()
+    
+    # 3. HARGA KOMODITAS
     st.subheader("🏙️ Harga Acuan (Gudang Padang)")
     tabs = st.tabs(["🌱 TANI", "🐟 LAUT", "🦅 HUTAN"])
     
     def show_smart_card(label, key):
         price = acuan_data.get(key, 0)
-        prev_price = acuan_data.get(f"{key}_prev", price) # Ambil harga lama
+        prev_price = acuan_data.get(f"{key}_prev", price)
         
-        # LOGIKA TREN OTOMATIS
+        # Trend Logic
         trend_html = ""
         diff = price - prev_price
-        
-        if diff > 0:
-            trend_html = f'<span class="trend-up">▲ +Rp {diff:,}</span>'
-        elif diff < 0:
-            trend_html = f'<span class="trend-down">▼ -Rp {abs(diff):,}</span>'
-        else:
-            trend_html = '<span class="trend-flat">= STABIL</span>'
+        if diff > 0: trend_html = f'<span class="trend-up">▲ +{diff:,}</span>'
+        elif diff < 0: trend_html = f'<span class="trend-down">▼ -{abs(diff):,}</span>'
+        else: trend_html = '<span class="trend-flat">= Stabil</span>'
             
-        # DATA EDUKASI
+        # Info Logic
         info = INFO_KOMODITAS.get(key, {})
         img_url = info.get("img", DEFAULT_IMG)
-        desc = info.get("desc", "Komoditas unggulan Mentawai.")
-        guna = info.get("guna", "Bahan baku industri.")
         
         with st.container():
             st.markdown(f"""
@@ -184,14 +225,14 @@ def render_dashboard():
             </div>
             """, unsafe_allow_html=True)
             
-            with st.expander(f"ℹ️ Info & Gambar {label}"):
+            with st.expander(f"ℹ️ Gambar & Info"):
                 c_img, c_text = st.columns([1, 2])
                 with c_img: st.image(img_url, use_container_width=True)
                 with c_text:
-                    st.markdown(f"""<div class="info-title">Deskripsi:</div>{desc}<br><br><div class="info-title">Kegunaan:</div>{guna}""", unsafe_allow_html=True)
-                    # Tombol Share Produk
-                    pesan_share = f"Cek harga {label} hari ini: Rp {price:,}. Info lengkap: https://pasarmentawai.streamlit.app"
-                    st.markdown(f"""<a href="https://wa.me/?text={urllib.parse.quote(pesan_share)}" target="_blank" style="text-decoration:none; color:#00CC96; font-size:12px; font-weight:bold;">📤 Bagikan ke WA</a>""", unsafe_allow_html=True)
+                    st.caption(info.get("desc", "-"))
+                    st.caption(f"**Kegunaan:** {info.get('guna', '-')}")
+                    share_txt = f"Harga {label}: Rp {price:,}. Cek: https://pasarmentawai.streamlit.app"
+                    st.markdown(f"""<a href="https://wa.me/?text={urllib.parse.quote(share_txt)}" target="_blank" style="color:#00CC96; font-size:12px;">📤 Share WA</a>""", unsafe_allow_html=True)
 
     with tabs[0]: 
         c1, c2, c3 = st.columns(3)
@@ -268,14 +309,13 @@ def render_calculator():
     with t1:
         c1, c2 = st.columns(2)
         with c1: w = st.number_input("Berat (Kg)", 1); p = st.number_input("Harga Deal (Rp)", 0, step=500)
-        with c2: st.markdown(f"""<div class="alert-box success" style="text-align:center;"><h4 style="margin:0;">TOTAL</h4><h1 style="margin:0; color:#00CC96;">Rp {w*p:,}</h1></div>""", unsafe_allow_html=True)
+        with c2: st.markdown(f"""<div class="card-container" style="text-align:center;"><h4 style="margin:0;">TOTAL</h4><h1 style="margin:0; color:#00CC96;">Rp {w*p:,}</h1></div>""", unsafe_allow_html=True)
     with t2:
         colA, colB = st.columns(2)
         with colA: ts = st.selectbox("Jenis", ["Cengkeh", "Kopra", "Pinang"]); ww = st.number_input("Berat Basah", 1.0); wp = st.number_input("Jual Basah", 0)
         with colB:
             r = {"Cengkeh": 0.30, "Kopra": 0.50, "Pinang": 0.25}
-            dw = ww * r[ts]
-            dp = 0
+            dw = ww * r[ts]; dp = 0
             if ts == "Cengkeh": dp = acuan_data.get("Cengkeh Super (Kering)", 0)
             elif ts == "Kopra": dp = acuan_data.get("Kopra Gudang (Kering)", 0)
             elif ts == "Pinang": dp = acuan_data.get("Pinang Kering (Biji)", 0)
@@ -286,43 +326,57 @@ def render_calculator():
 
 def render_admin():
     st.title("🛠️ Panel Admin")
-    tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs(["⚙️ Harga", "👮‍♂️ Moderasi", "📢 Broadcast", "👥 Toke", "📰 Berita", "📂 Data"])
+    # TAB BARU: LOGISTIK
+    tab1, tab2, tab3, tab4, tab5, tab6, tab7 = st.tabs(["⚙️ Harga", "🚢 Logistik", "👮‍♂️ Moderasi", "📢 Broadcast", "👥 Toke", "📰 Berita", "📂 Data"])
     
     with tab1:
-        st.info("💡 Sistem akan otomatis menghitung Tren (Naik/Turun) berdasarkan harga yang Anda input.")
+        st.info("Harga otomatis menghitung tren.")
         with st.form("upd_price"):
             updates = {}
             for item in LIST_KOMODITAS:
-                # Logika Simpan Harga Lama (History)
-                old_price = acuan_data.get(item, 0)
-                new_price = st.number_input(item, value=old_price)
-                
-                updates[item] = new_price
-                updates[f"{item}_prev"] = old_price # Simpan history untuk pembanding
-                
-            if st.form_submit_button("Simpan & Update Tren"):
+                old = acuan_data.get(item, 0)
+                new = st.number_input(item, value=old)
+                updates[item] = new
+                updates[f"{item}_prev"] = old
+            if st.form_submit_button("Simpan"):
                 db.collection('settings').document('harga_padang').set(updates, merge=True)
-                st.toast("Harga & Tren Diperbarui!", icon="📈"); time.sleep(1); st.rerun()
+                st.toast("Disimpan!", icon="✅"); time.sleep(1); st.rerun()
 
+    # FITUR UPDATE KAPAL
     with tab2:
-        st.subheader("Hapus Data")
+        st.subheader("Update Status Kapal")
+        with st.form("upd_kapal"):
+            upd_logistik = {}
+            for kpl in LIST_KAPAL:
+                pilihan = ["Jadwal Normal", "Batal Berangkat", "Docking", "Tunda (Cuaca Buruk)", "Rusak"]
+                curr_stat = logistik_data.get(kpl, "Jadwal Normal")
+                # Cari index pilihan
+                idx = pilihan.index(curr_stat) if curr_stat in pilihan else 0
+                upd_logistik[kpl] = st.selectbox(f"Status {kpl}", pilihan, index=idx)
+            
+            if st.form_submit_button("Simpan Info Kapal"):
+                db.collection('settings').document('logistik').set(upd_logistik, merge=True)
+                st.success("Info Kapal Diupdate!")
+                st.rerun()
+
+    with tab3:
         if st.button("Hapus Laporan Spam"):
             if db:
                 docs = db.collection('mentawai_v2').order_by('waktu', direction=firestore.Query.DESCENDING).limit(1).stream()
                 for d in docs: db.collection('mentawai_v2').document(d.id).delete()
                 st.toast("Terhapus!")
-    with tab3:
-        pesan = f"*UPDATE HARGA MENTAWAI MARKET*\nCek sekarang: https://pasarmentawai.streamlit.app"
-        st.text_area("Copy:", pesan); st.link_button("Kirim WA", f"https://wa.me/?text={urllib.parse.quote(pesan)}")
     with tab4:
+        pesan = f"*HARGA & LOGISTIK MENTAWAI MARKET*\nCek: https://pasarmentawai.streamlit.app"
+        st.text_area("Copy:", pesan); st.link_button("Kirim WA", f"https://wa.me/?text={urllib.parse.quote(pesan)}")
+    with tab5:
         with st.form("add_ag"):
             nm = st.text_input("Nama"); lc = st.text_input("Lokasi"); wa = st.text_input("WA"); br = st.text_input("Barang")
             if st.form_submit_button("Tambah"): db.collection('agen_mentawai').add({"nama": nm, "lokasi": lc, "wa": wa, "barang": br}); st.success("Ditambahkan.")
-    with tab5:
-        curr = settings_data.get('berita', '')
-        news = st.text_area("Berita", curr)
-        if st.button("Terbitkan"): db.collection('settings').document('general').set({"berita": news, "tanggal_berita": datetime.datetime.now().strftime("%d %b")}); st.rerun()
     with tab6:
+        curr = settings_data.get('berita', '')
+        news = st.text_area("Teks Berjalan (Running Text)", curr)
+        if st.button("Terbitkan"): db.collection('settings').document('general').set({"berita": news, "tanggal_berita": datetime.datetime.now().strftime("%d %b")}); st.rerun()
+    with tab7:
         if st.button("Download CSV"):
             if db:
                 docs = db.collection('mentawai_v2').stream()
@@ -344,7 +398,7 @@ def main():
                 if st.button("Masuk"):
                     if "admin_password" in st.secrets and pw.strip() == st.secrets["admin_password"]: st.session_state.is_admin = True; st.rerun()
                     else: st.error("Salah")
-        st.divider(); st.caption("v18.0 Auto-Trend")
+        st.divider(); st.caption("v19.0 Logistic Intel")
 
     if nav == "Dashboard": render_dashboard()
     elif nav == "Kalkulator": render_calculator()
