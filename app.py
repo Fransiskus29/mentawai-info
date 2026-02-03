@@ -28,71 +28,71 @@ LIST_KOMODITAS = [
 ]
 
 # ==========================================
-# DATABASE GAMBAR (LINK STABIL WIKIMEDIA)
+# DATABASE GAMBAR (VERSI UNSPLASH STABIL)
 # ==========================================
 INFO_KOMODITAS = {
     # --- CENGKEH ---
     "Cengkeh Super (Kering)": {
-        "img": "https://upload.wikimedia.org/wikipedia/commons/a/a2/Clove_in_white_background.jpg",
+        "img": "https://images.unsplash.com/photo-1598511796318-7b8256bd2b20?auto=format&fit=crop&w=600&q=80",
         "desc": "Cengkeh kering sempurna, warna hitam mengkilap, bersih, dan tidak patah.",
         "guna": "Rokok Kretek Premium & Ekspor."
     },
     "Cengkeh Biasa (Asalan)": {
-        "img": "https://upload.wikimedia.org/wikipedia/commons/thumb/2/21/Cloves_dried.jpg/640px-Cloves_dried.jpg",
+        "img": "https://images.unsplash.com/photo-1601314167099-232775b3d6fd?auto=format&fit=crop&w=600&q=80",
         "desc": "Cengkeh yang warnanya pudar atau kemerahan, kadar air masih agak tinggi.",
         "guna": "Campuran rokok (Harga kena potongan)."
     },
     "Gagang Cengkeh": {
-        "img": "https://upload.wikimedia.org/wikipedia/commons/thumb/5/5e/Syzygium_aromaticum_A.jpg/367px-Syzygium_aromaticum_A.jpg",
+        "img": "https://upload.wikimedia.org/wikipedia/commons/thumb/5/5e/Syzygium_aromaticum_A.jpg/367px-Syzygium_aromaticum_A.jpg", # Tetap Wiki (tapi low res biar ringan)
         "desc": "Tangkai bunga cengkeh yang sudah dipisahkan dan dikeringkan.",
         "guna": "Minyak Atsiri & Campuran Tembakau."
     },
     "Minyak Cengkeh": {
-        "img": "https://upload.wikimedia.org/wikipedia/commons/8/88/Essential_oil_clove.jpg",
+        "img": "https://images.unsplash.com/photo-1615485925763-867862880905?auto=format&fit=crop&w=600&q=80",
         "desc": "Minyak hasil penyulingan daun/gagang cengkeh. Wangi menyengat.",
         "guna": "Obat Sakit Gigi & Aromaterapi."
     },
 
     # --- KELAPA ---
     "Kopra Gudang (Kering)": {
-        "img": "https://upload.wikimedia.org/wikipedia/commons/6/6d/Coconut_meat.jpg",
+        "img": "https://images.unsplash.com/photo-1621256372224-11884457e5b3?auto=format&fit=crop&w=600&q=80",
         "desc": "Daging kelapa kering (kadar air <5%), putih bersih, tidak berjamur.",
         "guna": "Minyak Goreng Kualitas Tinggi (Bimoli dll)."
     },
     "Kopra Asalan (Basah)": {
-        "img": "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b5/Coconut_drying_1.jpg/640px-Coconut_drying_1.jpg",
+        "img": "https://images.unsplash.com/photo-1560780552-ba54683cb963?auto=format&fit=crop&w=600&q=80",
         "desc": "Kopra yang dijemur seadanya atau diasap. Warna kecoklatan/hitam.",
         "guna": "Minyak Curah & Pakan Ternak."
     },
     "Kelapa Butir": {
-        "img": "https://upload.wikimedia.org/wikipedia/commons/d/d3/Coconut_123.jpg",
+        "img": "https://images.unsplash.com/photo-1565551932408-569a4892c556?auto=format&fit=crop&w=600&q=80",
         "desc": "Kelapa tua utuh yang belum dicungkil.",
         "guna": "Pasar tradisional & Santan."
     },
 
-    # --- PINANG & LAINNYA ---
+    # --- LAINNYA ---
     "Pinang Kering (Biji)": {
-        "img": "https://upload.wikimedia.org/wikipedia/commons/3/30/Areca_catechu_Nut.jpg",
+        "img": "https://upload.wikimedia.org/wikipedia/commons/3/30/Areca_catechu_Nut.jpg", # Wiki Direct
         "desc": "Biji pinang belah kering keras (batu).",
         "guna": "Ekspor India, Pewarna, Permen."
     },
     "Pinang Basah (Kupas)": {
-        "img": "https://upload.wikimedia.org/wikipedia/commons/2/2c/Areca_catechu_fruit.jpg",
+        "img": "https://upload.wikimedia.org/wikipedia/commons/thumb/2/2c/Areca_catechu_fruit.jpg/640px-Areca_catechu_fruit.jpg",
         "desc": "Pinang segar yang baru dikupas kulitnya.",
         "guna": "Harus segera dijemur agar tidak busuk."
     },
     "Kakao (Coklat)": {
-        "img": "https://upload.wikimedia.org/wikipedia/commons/c/c3/Matengo_Cacao.jpg",
+        "img": "https://images.unsplash.com/photo-1575371301285-d58853c070c0?auto=format&fit=crop&w=600&q=80",
         "desc": "Biji kakao fermentasi kering.",
         "guna": "Bahan baku Coklat."
     },
     "Sagu": {
-        "img": "https://upload.wikimedia.org/wikipedia/commons/2/23/Sago_pearls.jpg",
+        "img": "https://images.unsplash.com/photo-1518173946687-a4c8892bbd9f?auto=format&fit=crop&w=600&q=80", # Generic Flour/Starch
         "desc": "Tepung pati batang rumbia.",
         "guna": "Makanan Pokok (Kapurut/Sagu Bakar)."
     },
     "Nilam": {
-        "img": "https://upload.wikimedia.org/wikipedia/commons/0/05/Pogostemon_cablin_01.jpg",
+        "img": "https://images.unsplash.com/photo-1605645517173-03023e387f62?auto=format&fit=crop&w=600&q=80",
         "desc": "Daun nilam kering atau minyak.",
         "guna": "Pengikat Parfum (Fixative)."
     },
@@ -102,19 +102,19 @@ INFO_KOMODITAS = {
         "guna": "Menyirih & Farmasi."
     },
 
-    # --- HASIL LAUT & HUTAN ---
+    # --- LAUT & HUTAN ---
     "Gurita": {
-        "img": "https://upload.wikimedia.org/wikipedia/commons/d/d4/Octopus_vulgaris_2.jpg",
+        "img": "https://images.unsplash.com/photo-1545671913-b89ac1b4ac10?auto=format&fit=crop&w=600&q=80",
         "desc": "Gurita laut segar.",
         "guna": "Ekspor Jepang."
     },
     "Lobster": {
-        "img": "https://upload.wikimedia.org/wikipedia/commons/9/9f/Panulirus_versicolor.jpg",
+        "img": "https://images.unsplash.com/photo-1551325381-e2247dc27063?auto=format&fit=crop&w=600&q=80",
         "desc": "Udang karang/barong.",
         "guna": "Restoran Mewah."
     },
     "Kerapu": {
-        "img": "https://upload.wikimedia.org/wikipedia/commons/7/7f/Epinephelus_malabaricus.jpg",
+        "img": "https://images.unsplash.com/photo-1535591273668-578e31182c4f?auto=format&fit=crop&w=600&q=80",
         "desc": "Ikan kerapu hidup/segar.",
         "guna": "Ekspor Hongkong."
     },
@@ -124,7 +124,7 @@ INFO_KOMODITAS = {
         "guna": "Obat Cina & Makanan Mahal."
     },
     "Ikan Asin": {
-        "img": "https://upload.wikimedia.org/wikipedia/commons/8/89/Salted_fish_in_Market.jpg",
+        "img": "https://images.unsplash.com/photo-1517436079979-42b406ce9023?auto=format&fit=crop&w=600&q=80",
         "desc": "Ikan laut diawetkan garam.",
         "guna": "Lauk pauk."
     },
@@ -135,20 +135,20 @@ INFO_KOMODITAS = {
     },
     "Manau (Rotan)": {
         "img": "https://upload.wikimedia.org/wikipedia/commons/8/86/Calamus_manan.jpg",
-        "desc": "Rotan batang besar.",
+        "desc": "Batang rotan diameter besar.",
         "guna": "Furniture (Kursi/Meja)."
     },
     "Madu Hutan": {
-        "img": "https://upload.wikimedia.org/wikipedia/commons/8/87/Honey_comb.jpg",
+        "img": "https://images.unsplash.com/photo-1587049352846-4a222e784d38?auto=format&fit=crop&w=600&q=80",
         "desc": "Madu lebah liar asli.",
         "guna": "Obat & Stamina."
     }
 }
-DEFAULT_IMG = "https://via.placeholder.com/300x200.png?text=Mentawai+Market"
+DEFAULT_IMG = "https://placehold.co/600x400/png?text=Mentawai+Market"
 LIST_KAPAL = ["Mentawai Fast", "KMP Ambu-Ambu", "KMP Gambolo", "Sabuk Nusantara", "Kapal Perintis"]
 
 # ==========================================
-# 2. FRONT-END ENGINE (CSS PRO V21)
+# 2. FRONT-END ENGINE (CSS PRO V22)
 # ==========================================
 def inject_custom_css():
     st.markdown("""
@@ -156,19 +156,27 @@ def inject_custom_css():
         #MainMenu {visibility: visible;}
         footer {visibility: hidden;}
         header[data-testid="stHeader"] { background-color: transparent; z-index: 1; }
+
+        /* Running Text */
         .marquee-container { width: 100%; background-color: #222; color: #FFA500; padding: 10px; white-space: nowrap; overflow: hidden; box-sizing: border-box; border-bottom: 2px solid #FFA500; margin-bottom: 20px; }
         .marquee { display: inline-block; padding-left: 100%; animation: marquee 25s linear infinite; font-weight: bold; font-family: monospace; }
         @keyframes marquee { 0% { transform: translate(0, 0); } 100% { transform: translate(-100%, 0); } }
+
+        /* Cards */
         .card-container { background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(10px); border: 1px solid rgba(128, 128, 128, 0.2); border-radius: 12px; padding: 15px; margin-bottom: 15px; transition: all 0.3s ease; }
         .card-container:hover { transform: translateY(-3px); border-color: #00CC96; box-shadow: 0 4px 20px rgba(0, 204, 150, 0.15); }
+
         .price-tag { font-size: 22px; font-weight: 800; color: #00CC96; }
         .label-small { font-size: 11px; opacity: 0.7; text-transform: uppercase; letter-spacing: 1px; }
+        
         .trend-up { color: #00CC96; background: rgba(0, 204, 150, 0.1); padding: 2px 6px; border-radius: 4px; font-size: 11px; font-weight: bold; }
         .trend-down { color: #FF4B4B; background: rgba(255, 75, 75, 0.1); padding: 2px 6px; border-radius: 4px; font-size: 11px; font-weight: bold; }
         .trend-flat { color: #888; background: rgba(128, 128, 128, 0.1); padding: 2px 6px; border-radius: 4px; font-size: 11px; font-weight: bold; }
+
         .ship-ok { background: #00CC96; color: black; padding: 5px 10px; border-radius: 4px; font-weight: bold; font-size: 12px; }
         .ship-bad { background: #FF4B4B; color: white; padding: 5px 10px; border-radius: 4px; font-weight: bold; font-size: 12px; }
         .ship-warn { background: #FFA500; color: black; padding: 5px 10px; border-radius: 4px; font-weight: bold; font-size: 12px; }
+        
         .footer-pro { position: fixed; left: 0; bottom: 0; width: 100%; background: #0e1117; color: #666; text-align: center; padding: 6px; font-size: 11px; border-top: 1px solid #333; z-index: 999; }
         @media (max-width: 600px) { .price-tag { font-size: 20px; } }
     </style>
@@ -210,6 +218,7 @@ def render_dashboard():
     # RUNNING TEXT
     berita = settings_data.get('berita', 'Selamat Datang di Mentawai Smart Market')
     st.markdown(f"""<div class="marquee-container"><div class="marquee">📢 INFO PASAR: {berita} &nbsp;&nbsp;|&nbsp;&nbsp; 🚢 UPDATE: Cek Status Kapal di bawah...</div></div>""", unsafe_allow_html=True)
+
     st.title("📡 Pusat Pantauan Harga")
     
     # STATUS KAPAL
@@ -379,7 +388,7 @@ def main():
             with st.expander("Login"):
                 if st.button("Masuk") and st.text_input("Pass", type="password").strip() == st.secrets.get("admin_password", ""):
                     st.session_state.is_admin = True; st.rerun()
-        st.divider(); st.caption("v21.0 - Stable Images")
+        st.divider(); st.caption("v22.0 - Unsplash Images")
 
     if nav == "Dashboard": render_dashboard()
     elif nav == "Kalkulator": render_calculator()
